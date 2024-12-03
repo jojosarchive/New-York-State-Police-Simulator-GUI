@@ -1,0 +1,148 @@
+<html>
+<head>
+<title>templates.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #7a7e85;}
+.s1 { color: #bcbec4;}
+.s2 { color: #5f826b; font-style: italic;}
+.s3 { color: #bcbec4;}
+.s4 { color: #6aab73;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+templates.py</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0">#-----------------------------------------------------------------------------</span>
+<a name="l2"><span class="ln">2    </span></a><span class="s0"># Copyright (c) 2005-2023, PyInstaller Development Team.</span>
+<a name="l3"><span class="ln">3    </span></a><span class="s0">#</span>
+<a name="l4"><span class="ln">4    </span></a><span class="s0"># Distributed under the terms of the GNU General Public License (version 2</span>
+<a name="l5"><span class="ln">5    </span></a><span class="s0"># or later) with exception for distributing the bootloader.</span>
+<a name="l6"><span class="ln">6    </span></a><span class="s0">#</span>
+<a name="l7"><span class="ln">7    </span></a><span class="s0"># The full license is in the file COPYING.txt, distributed with this software.</span>
+<a name="l8"><span class="ln">8    </span></a><span class="s0">#</span>
+<a name="l9"><span class="ln">9    </span></a><span class="s0"># SPDX-License-Identifier: (GPL-2.0-or-later WITH Bootloader-exception)</span>
+<a name="l10"><span class="ln">10   </span></a><span class="s0">#-----------------------------------------------------------------------------</span>
+<a name="l11"><span class="ln">11   </span></a><span class="s2">&quot;&quot;&quot; 
+<a name="l12"><span class="ln">12   </span></a>Templates to generate .spec files. 
+<a name="l13"><span class="ln">13   </span></a>&quot;&quot;&quot;</span>
+<a name="l14"><span class="ln">14   </span></a>
+<a name="l15"><span class="ln">15   </span></a><span class="s1">onefiletmplt </span><span class="s3">= </span><span class="s4">&quot;&quot;&quot;# -*- mode: python ; coding: utf-8 -*- 
+<a name="l16"><span class="ln">16   </span></a>%(preamble)s 
+<a name="l17"><span class="ln">17   </span></a> 
+<a name="l18"><span class="ln">18   </span></a>a = Analysis( 
+<a name="l19"><span class="ln">19   </span></a>    %(scripts)s, 
+<a name="l20"><span class="ln">20   </span></a>    pathex=%(pathex)s, 
+<a name="l21"><span class="ln">21   </span></a>    binaries=%(binaries)s, 
+<a name="l22"><span class="ln">22   </span></a>    datas=%(datas)s, 
+<a name="l23"><span class="ln">23   </span></a>    hiddenimports=%(hiddenimports)s, 
+<a name="l24"><span class="ln">24   </span></a>    hookspath=%(hookspath)r, 
+<a name="l25"><span class="ln">25   </span></a>    hooksconfig={}, 
+<a name="l26"><span class="ln">26   </span></a>    runtime_hooks=%(runtime_hooks)r, 
+<a name="l27"><span class="ln">27   </span></a>    excludes=%(excludes)s, 
+<a name="l28"><span class="ln">28   </span></a>    noarchive=%(noarchive)s, 
+<a name="l29"><span class="ln">29   </span></a>    optimize=%(optimize)r, 
+<a name="l30"><span class="ln">30   </span></a>) 
+<a name="l31"><span class="ln">31   </span></a>pyz = PYZ(a.pure) 
+<a name="l32"><span class="ln">32   </span></a>%(splash_init)s 
+<a name="l33"><span class="ln">33   </span></a>exe = EXE( 
+<a name="l34"><span class="ln">34   </span></a>    pyz, 
+<a name="l35"><span class="ln">35   </span></a>    a.scripts, 
+<a name="l36"><span class="ln">36   </span></a>    a.binaries, 
+<a name="l37"><span class="ln">37   </span></a>    a.datas,%(splash_target)s%(splash_binaries)s 
+<a name="l38"><span class="ln">38   </span></a>    %(options)s, 
+<a name="l39"><span class="ln">39   </span></a>    name='%(name)s', 
+<a name="l40"><span class="ln">40   </span></a>    debug=%(debug_bootloader)s, 
+<a name="l41"><span class="ln">41   </span></a>    bootloader_ignore_signals=%(bootloader_ignore_signals)s, 
+<a name="l42"><span class="ln">42   </span></a>    strip=%(strip)s, 
+<a name="l43"><span class="ln">43   </span></a>    upx=%(upx)s, 
+<a name="l44"><span class="ln">44   </span></a>    upx_exclude=%(upx_exclude)s, 
+<a name="l45"><span class="ln">45   </span></a>    runtime_tmpdir=%(runtime_tmpdir)r, 
+<a name="l46"><span class="ln">46   </span></a>    console=%(console)s, 
+<a name="l47"><span class="ln">47   </span></a>    disable_windowed_traceback=%(disable_windowed_traceback)s, 
+<a name="l48"><span class="ln">48   </span></a>    argv_emulation=%(argv_emulation)r, 
+<a name="l49"><span class="ln">49   </span></a>    target_arch=%(target_arch)r, 
+<a name="l50"><span class="ln">50   </span></a>    codesign_identity=%(codesign_identity)r, 
+<a name="l51"><span class="ln">51   </span></a>    entitlements_file=%(entitlements_file)r,%(exe_options)s 
+<a name="l52"><span class="ln">52   </span></a>) 
+<a name="l53"><span class="ln">53   </span></a>&quot;&quot;&quot;</span>
+<a name="l54"><span class="ln">54   </span></a>
+<a name="l55"><span class="ln">55   </span></a><span class="s1">onedirtmplt </span><span class="s3">= </span><span class="s4">&quot;&quot;&quot;# -*- mode: python ; coding: utf-8 -*- 
+<a name="l56"><span class="ln">56   </span></a>%(preamble)s 
+<a name="l57"><span class="ln">57   </span></a> 
+<a name="l58"><span class="ln">58   </span></a>a = Analysis( 
+<a name="l59"><span class="ln">59   </span></a>    %(scripts)s, 
+<a name="l60"><span class="ln">60   </span></a>    pathex=%(pathex)s, 
+<a name="l61"><span class="ln">61   </span></a>    binaries=%(binaries)s, 
+<a name="l62"><span class="ln">62   </span></a>    datas=%(datas)s, 
+<a name="l63"><span class="ln">63   </span></a>    hiddenimports=%(hiddenimports)s, 
+<a name="l64"><span class="ln">64   </span></a>    hookspath=%(hookspath)r, 
+<a name="l65"><span class="ln">65   </span></a>    hooksconfig={}, 
+<a name="l66"><span class="ln">66   </span></a>    runtime_hooks=%(runtime_hooks)r, 
+<a name="l67"><span class="ln">67   </span></a>    excludes=%(excludes)s, 
+<a name="l68"><span class="ln">68   </span></a>    noarchive=%(noarchive)s, 
+<a name="l69"><span class="ln">69   </span></a>    optimize=%(optimize)r, 
+<a name="l70"><span class="ln">70   </span></a>) 
+<a name="l71"><span class="ln">71   </span></a>pyz = PYZ(a.pure) 
+<a name="l72"><span class="ln">72   </span></a>%(splash_init)s 
+<a name="l73"><span class="ln">73   </span></a>exe = EXE( 
+<a name="l74"><span class="ln">74   </span></a>    pyz, 
+<a name="l75"><span class="ln">75   </span></a>    a.scripts,%(splash_target)s 
+<a name="l76"><span class="ln">76   </span></a>    %(options)s, 
+<a name="l77"><span class="ln">77   </span></a>    exclude_binaries=True, 
+<a name="l78"><span class="ln">78   </span></a>    name='%(name)s', 
+<a name="l79"><span class="ln">79   </span></a>    debug=%(debug_bootloader)s, 
+<a name="l80"><span class="ln">80   </span></a>    bootloader_ignore_signals=%(bootloader_ignore_signals)s, 
+<a name="l81"><span class="ln">81   </span></a>    strip=%(strip)s, 
+<a name="l82"><span class="ln">82   </span></a>    upx=%(upx)s, 
+<a name="l83"><span class="ln">83   </span></a>    console=%(console)s, 
+<a name="l84"><span class="ln">84   </span></a>    disable_windowed_traceback=%(disable_windowed_traceback)s, 
+<a name="l85"><span class="ln">85   </span></a>    argv_emulation=%(argv_emulation)r, 
+<a name="l86"><span class="ln">86   </span></a>    target_arch=%(target_arch)r, 
+<a name="l87"><span class="ln">87   </span></a>    codesign_identity=%(codesign_identity)r, 
+<a name="l88"><span class="ln">88   </span></a>    entitlements_file=%(entitlements_file)r,%(exe_options)s 
+<a name="l89"><span class="ln">89   </span></a>) 
+<a name="l90"><span class="ln">90   </span></a>coll = COLLECT( 
+<a name="l91"><span class="ln">91   </span></a>    exe, 
+<a name="l92"><span class="ln">92   </span></a>    a.binaries, 
+<a name="l93"><span class="ln">93   </span></a>    a.datas,%(splash_binaries)s 
+<a name="l94"><span class="ln">94   </span></a>    strip=%(strip)s, 
+<a name="l95"><span class="ln">95   </span></a>    upx=%(upx)s, 
+<a name="l96"><span class="ln">96   </span></a>    upx_exclude=%(upx_exclude)s, 
+<a name="l97"><span class="ln">97   </span></a>    name='%(name)s', 
+<a name="l98"><span class="ln">98   </span></a>) 
+<a name="l99"><span class="ln">99   </span></a>&quot;&quot;&quot;</span>
+<a name="l100"><span class="ln">100  </span></a>
+<a name="l101"><span class="ln">101  </span></a><span class="s1">bundleexetmplt </span><span class="s3">= </span><span class="s4">&quot;&quot;&quot;app = BUNDLE( 
+<a name="l102"><span class="ln">102  </span></a>    exe, 
+<a name="l103"><span class="ln">103  </span></a>    name='%(name)s.app', 
+<a name="l104"><span class="ln">104  </span></a>    icon=%(icon)s, 
+<a name="l105"><span class="ln">105  </span></a>    bundle_identifier=%(bundle_identifier)s, 
+<a name="l106"><span class="ln">106  </span></a>) 
+<a name="l107"><span class="ln">107  </span></a>&quot;&quot;&quot;</span>
+<a name="l108"><span class="ln">108  </span></a>
+<a name="l109"><span class="ln">109  </span></a><span class="s1">bundletmplt </span><span class="s3">= </span><span class="s4">&quot;&quot;&quot;app = BUNDLE( 
+<a name="l110"><span class="ln">110  </span></a>    coll, 
+<a name="l111"><span class="ln">111  </span></a>    name='%(name)s.app', 
+<a name="l112"><span class="ln">112  </span></a>    icon=%(icon)s, 
+<a name="l113"><span class="ln">113  </span></a>    bundle_identifier=%(bundle_identifier)s, 
+<a name="l114"><span class="ln">114  </span></a>) 
+<a name="l115"><span class="ln">115  </span></a>&quot;&quot;&quot;</span>
+<a name="l116"><span class="ln">116  </span></a>
+<a name="l117"><span class="ln">117  </span></a><span class="s1">splashtmpl </span><span class="s3">= </span><span class="s4">&quot;&quot;&quot;splash = Splash( 
+<a name="l118"><span class="ln">118  </span></a>    %(splash_image)r, 
+<a name="l119"><span class="ln">119  </span></a>    binaries=a.binaries, 
+<a name="l120"><span class="ln">120  </span></a>    datas=a.datas, 
+<a name="l121"><span class="ln">121  </span></a>    text_pos=None, 
+<a name="l122"><span class="ln">122  </span></a>    text_size=12, 
+<a name="l123"><span class="ln">123  </span></a>    minify_script=True, 
+<a name="l124"><span class="ln">124  </span></a>    always_on_top=True, 
+<a name="l125"><span class="ln">125  </span></a>) 
+<a name="l126"><span class="ln">126  </span></a>&quot;&quot;&quot;</span>
+<a name="l127"><span class="ln">127  </span></a></pre>
+</body>
+</html>

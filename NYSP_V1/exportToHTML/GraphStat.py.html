@@ -1,0 +1,97 @@
+<html>
+<head>
+<title>GraphStat.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #5f826b; font-style: italic;}
+.s1 { color: #bcbec4;}
+.s2 { color: #cf8e6d;}
+.s3 { color: #bcbec4;}
+.s4 { color: #2aacb8;}
+.s5 { color: #6aab73;}
+.s6 { color: #7a7e85;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+GraphStat.py</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0">&quot;&quot;&quot; 
+<a name="l2"><span class="ln">2    </span></a>altgraph.GraphStat - Functions providing various graph statistics 
+<a name="l3"><span class="ln">3    </span></a>================================================================= 
+<a name="l4"><span class="ln">4    </span></a>&quot;&quot;&quot;</span>
+<a name="l5"><span class="ln">5    </span></a>
+<a name="l6"><span class="ln">6    </span></a>
+<a name="l7"><span class="ln">7    </span></a><span class="s2">def </span><span class="s1">degree_dist</span><span class="s3">(</span><span class="s1">graph</span><span class="s3">, </span><span class="s1">limits</span><span class="s3">=(</span><span class="s4">0</span><span class="s3">, </span><span class="s4">0</span><span class="s3">), </span><span class="s1">bin_num</span><span class="s3">=</span><span class="s4">10</span><span class="s3">, </span><span class="s1">mode</span><span class="s3">=</span><span class="s5">&quot;out&quot;</span><span class="s3">):</span>
+<a name="l8"><span class="ln">8    </span></a>    <span class="s0">&quot;&quot;&quot; 
+<a name="l9"><span class="ln">9    </span></a>    Computes the degree distribution for a graph. 
+<a name="l10"><span class="ln">10   </span></a> 
+<a name="l11"><span class="ln">11   </span></a>    Returns a list of tuples where the first element of the tuple is the 
+<a name="l12"><span class="ln">12   </span></a>    center of the bin representing a range of degrees and the second element 
+<a name="l13"><span class="ln">13   </span></a>    of the tuple are the number of nodes with the degree falling in the range. 
+<a name="l14"><span class="ln">14   </span></a> 
+<a name="l15"><span class="ln">15   </span></a>    Example:: 
+<a name="l16"><span class="ln">16   </span></a> 
+<a name="l17"><span class="ln">17   </span></a>        .... 
+<a name="l18"><span class="ln">18   </span></a>    &quot;&quot;&quot;</span>
+<a name="l19"><span class="ln">19   </span></a>
+<a name="l20"><span class="ln">20   </span></a>    <span class="s1">deg </span><span class="s3">= []</span>
+<a name="l21"><span class="ln">21   </span></a>    <span class="s2">if </span><span class="s1">mode </span><span class="s3">== </span><span class="s5">&quot;inc&quot;</span><span class="s3">:</span>
+<a name="l22"><span class="ln">22   </span></a>        <span class="s1">get_deg </span><span class="s3">= </span><span class="s1">graph</span><span class="s3">.</span><span class="s1">inc_degree</span>
+<a name="l23"><span class="ln">23   </span></a>    <span class="s2">else</span><span class="s3">:</span>
+<a name="l24"><span class="ln">24   </span></a>        <span class="s1">get_deg </span><span class="s3">= </span><span class="s1">graph</span><span class="s3">.</span><span class="s1">out_degree</span>
+<a name="l25"><span class="ln">25   </span></a>
+<a name="l26"><span class="ln">26   </span></a>    <span class="s2">for </span><span class="s1">node </span><span class="s2">in </span><span class="s1">graph</span><span class="s3">:</span>
+<a name="l27"><span class="ln">27   </span></a>        <span class="s1">deg</span><span class="s3">.</span><span class="s1">append</span><span class="s3">(</span><span class="s1">get_deg</span><span class="s3">(</span><span class="s1">node</span><span class="s3">))</span>
+<a name="l28"><span class="ln">28   </span></a>
+<a name="l29"><span class="ln">29   </span></a>    <span class="s2">if not </span><span class="s1">deg</span><span class="s3">:</span>
+<a name="l30"><span class="ln">30   </span></a>        <span class="s2">return </span><span class="s3">[]</span>
+<a name="l31"><span class="ln">31   </span></a>
+<a name="l32"><span class="ln">32   </span></a>    <span class="s1">results </span><span class="s3">= </span><span class="s1">_binning</span><span class="s3">(</span><span class="s1">values</span><span class="s3">=</span><span class="s1">deg</span><span class="s3">, </span><span class="s1">limits</span><span class="s3">=</span><span class="s1">limits</span><span class="s3">, </span><span class="s1">bin_num</span><span class="s3">=</span><span class="s1">bin_num</span><span class="s3">)</span>
+<a name="l33"><span class="ln">33   </span></a>
+<a name="l34"><span class="ln">34   </span></a>    <span class="s2">return </span><span class="s1">results</span>
+<a name="l35"><span class="ln">35   </span></a>
+<a name="l36"><span class="ln">36   </span></a>
+<a name="l37"><span class="ln">37   </span></a><span class="s1">_EPS </span><span class="s3">= </span><span class="s4">1.0 </span><span class="s3">/ (</span><span class="s4">2.0</span><span class="s3">**</span><span class="s4">32</span><span class="s3">)</span>
+<a name="l38"><span class="ln">38   </span></a>
+<a name="l39"><span class="ln">39   </span></a>
+<a name="l40"><span class="ln">40   </span></a><span class="s2">def </span><span class="s1">_binning</span><span class="s3">(</span><span class="s1">values</span><span class="s3">, </span><span class="s1">limits</span><span class="s3">=(</span><span class="s4">0</span><span class="s3">, </span><span class="s4">0</span><span class="s3">), </span><span class="s1">bin_num</span><span class="s3">=</span><span class="s4">10</span><span class="s3">):</span>
+<a name="l41"><span class="ln">41   </span></a>    <span class="s0">&quot;&quot;&quot; 
+<a name="l42"><span class="ln">42   </span></a>    Bins data that falls between certain limits, if the limits are (0, 0) the 
+<a name="l43"><span class="ln">43   </span></a>    minimum and maximum values are used. 
+<a name="l44"><span class="ln">44   </span></a> 
+<a name="l45"><span class="ln">45   </span></a>    Returns a list of tuples where the first element of the tuple is the 
+<a name="l46"><span class="ln">46   </span></a>    center of the bin and the second element of the tuple are the counts. 
+<a name="l47"><span class="ln">47   </span></a>    &quot;&quot;&quot;</span>
+<a name="l48"><span class="ln">48   </span></a>    <span class="s2">if </span><span class="s1">limits </span><span class="s3">== (</span><span class="s4">0</span><span class="s3">, </span><span class="s4">0</span><span class="s3">):</span>
+<a name="l49"><span class="ln">49   </span></a>        <span class="s1">min_val</span><span class="s3">, </span><span class="s1">max_val </span><span class="s3">= </span><span class="s1">min</span><span class="s3">(</span><span class="s1">values</span><span class="s3">) - </span><span class="s1">_EPS</span><span class="s3">, </span><span class="s1">max</span><span class="s3">(</span><span class="s1">values</span><span class="s3">) + </span><span class="s1">_EPS</span>
+<a name="l50"><span class="ln">50   </span></a>    <span class="s2">else</span><span class="s3">:</span>
+<a name="l51"><span class="ln">51   </span></a>        <span class="s1">min_val</span><span class="s3">, </span><span class="s1">max_val </span><span class="s3">= </span><span class="s1">limits</span>
+<a name="l52"><span class="ln">52   </span></a>
+<a name="l53"><span class="ln">53   </span></a>    <span class="s6"># get bin size</span>
+<a name="l54"><span class="ln">54   </span></a>    <span class="s1">bin_size </span><span class="s3">= (</span><span class="s1">max_val </span><span class="s3">- </span><span class="s1">min_val</span><span class="s3">) / </span><span class="s1">float</span><span class="s3">(</span><span class="s1">bin_num</span><span class="s3">)</span>
+<a name="l55"><span class="ln">55   </span></a>    <span class="s1">bins </span><span class="s3">= [</span><span class="s4">0</span><span class="s3">] * (</span><span class="s1">bin_num</span><span class="s3">)</span>
+<a name="l56"><span class="ln">56   </span></a>
+<a name="l57"><span class="ln">57   </span></a>    <span class="s6"># will ignore these outliers for now</span>
+<a name="l58"><span class="ln">58   </span></a>    <span class="s2">for </span><span class="s1">value </span><span class="s2">in </span><span class="s1">values</span><span class="s3">:</span>
+<a name="l59"><span class="ln">59   </span></a>        <span class="s2">try</span><span class="s3">:</span>
+<a name="l60"><span class="ln">60   </span></a>            <span class="s2">if </span><span class="s3">(</span><span class="s1">value </span><span class="s3">- </span><span class="s1">min_val</span><span class="s3">) &gt;= </span><span class="s4">0</span><span class="s3">:</span>
+<a name="l61"><span class="ln">61   </span></a>                <span class="s1">index </span><span class="s3">= </span><span class="s1">int</span><span class="s3">((</span><span class="s1">value </span><span class="s3">- </span><span class="s1">min_val</span><span class="s3">) / </span><span class="s1">float</span><span class="s3">(</span><span class="s1">bin_size</span><span class="s3">))</span>
+<a name="l62"><span class="ln">62   </span></a>                <span class="s1">bins</span><span class="s3">[</span><span class="s1">index</span><span class="s3">] += </span><span class="s4">1</span>
+<a name="l63"><span class="ln">63   </span></a>        <span class="s2">except </span><span class="s1">IndexError</span><span class="s3">:</span>
+<a name="l64"><span class="ln">64   </span></a>            <span class="s2">pass</span>
+<a name="l65"><span class="ln">65   </span></a>
+<a name="l66"><span class="ln">66   </span></a>    <span class="s6"># make it ready for an x,y plot</span>
+<a name="l67"><span class="ln">67   </span></a>    <span class="s1">result </span><span class="s3">= []</span>
+<a name="l68"><span class="ln">68   </span></a>    <span class="s1">center </span><span class="s3">= (</span><span class="s1">bin_size </span><span class="s3">/ </span><span class="s4">2</span><span class="s3">) + </span><span class="s1">min_val</span>
+<a name="l69"><span class="ln">69   </span></a>    <span class="s2">for </span><span class="s1">i</span><span class="s3">, </span><span class="s1">y </span><span class="s2">in </span><span class="s1">enumerate</span><span class="s3">(</span><span class="s1">bins</span><span class="s3">):</span>
+<a name="l70"><span class="ln">70   </span></a>        <span class="s1">x </span><span class="s3">= </span><span class="s1">center </span><span class="s3">+ </span><span class="s1">bin_size </span><span class="s3">* </span><span class="s1">i</span>
+<a name="l71"><span class="ln">71   </span></a>        <span class="s1">result</span><span class="s3">.</span><span class="s1">append</span><span class="s3">((</span><span class="s1">x</span><span class="s3">, </span><span class="s1">y</span><span class="s3">))</span>
+<a name="l72"><span class="ln">72   </span></a>
+<a name="l73"><span class="ln">73   </span></a>    <span class="s2">return </span><span class="s1">result</span>
+<a name="l74"><span class="ln">74   </span></a></pre>
+</body>
+</html>

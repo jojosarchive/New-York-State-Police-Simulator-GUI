@@ -1,0 +1,181 @@
+<html>
+<head>
+<title>pyi_rth_pkgres.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #7a7e85;}
+.s1 { color: #bcbec4;}
+.s2 { color: #cf8e6d;}
+.s3 { color: #bcbec4;}
+.s4 { color: #5f826b; font-style: italic;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+pyi_rth_pkgres.py</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0">#-----------------------------------------------------------------------------</span>
+<a name="l2"><span class="ln">2    </span></a><span class="s0"># Copyright (c) 2013-2023, PyInstaller Development Team.</span>
+<a name="l3"><span class="ln">3    </span></a><span class="s0">#</span>
+<a name="l4"><span class="ln">4    </span></a><span class="s0"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<a name="l5"><span class="ln">5    </span></a><span class="s0"># you may not use this file except in compliance with the License.</span>
+<a name="l6"><span class="ln">6    </span></a><span class="s0">#</span>
+<a name="l7"><span class="ln">7    </span></a><span class="s0"># The full license is in the file COPYING.txt, distributed with this software.</span>
+<a name="l8"><span class="ln">8    </span></a><span class="s0">#</span>
+<a name="l9"><span class="ln">9    </span></a><span class="s0"># SPDX-License-Identifier: Apache-2.0</span>
+<a name="l10"><span class="ln">10   </span></a><span class="s0">#-----------------------------------------------------------------------------</span>
+<a name="l11"><span class="ln">11   </span></a>
+<a name="l12"><span class="ln">12   </span></a><span class="s0"># To make pkg_resources work with frozen modules we need to set the 'Provider' class for PyiFrozenImporter. This class</span>
+<a name="l13"><span class="ln">13   </span></a><span class="s0"># decides where to look for resources and other stuff. 'pkg_resources.NullProvider' is dedicated to PEP302 import hooks</span>
+<a name="l14"><span class="ln">14   </span></a><span class="s0"># like PyiFrozenImporter is. It uses method __loader__.get_data() in methods pkg_resources.resource_string() and</span>
+<a name="l15"><span class="ln">15   </span></a><span class="s0"># pkg_resources.resource_stream()</span>
+<a name="l16"><span class="ln">16   </span></a><span class="s0">#</span>
+<a name="l17"><span class="ln">17   </span></a><span class="s0"># We provide PyiFrozenProvider, which subclasses the NullProvider and implements _has(), _isdir(), and _listdir()</span>
+<a name="l18"><span class="ln">18   </span></a><span class="s0"># methods, which are needed for pkg_resources.resource_exists(), resource_isdir(), and resource_listdir() to work. We</span>
+<a name="l19"><span class="ln">19   </span></a><span class="s0"># cannot use the DefaultProvider, because it provides filesystem-only implementations (and overrides _get() with a</span>
+<a name="l20"><span class="ln">20   </span></a><span class="s0"># filesystem-only one), whereas our provider needs to also support embedded resources.</span>
+<a name="l21"><span class="ln">21   </span></a><span class="s0">#</span>
+<a name="l22"><span class="ln">22   </span></a><span class="s0"># The PyiFrozenProvider allows querying/listing both PYZ-embedded and on-filesystem resources in a frozen package. The</span>
+<a name="l23"><span class="ln">23   </span></a><span class="s0"># results are typically combined for both types of resources (e.g., when listing a directory or checking whether a</span>
+<a name="l24"><span class="ln">24   </span></a><span class="s0"># resource exists). When the order of precedence matters, the PYZ-embedded resources take precedence over the</span>
+<a name="l25"><span class="ln">25   </span></a><span class="s0"># on-filesystem ones, to keep the behavior consistent with the actual file content retrieval via _get() method (which in</span>
+<a name="l26"><span class="ln">26   </span></a><span class="s0"># turn uses PyiFrozenImporter's get_data() method). For example, when checking whether a resource is a directory via</span>
+<a name="l27"><span class="ln">27   </span></a><span class="s0"># _isdir(), a PYZ-embedded file will take precedence over a potential on-filesystem directory. Also, in contrast to</span>
+<a name="l28"><span class="ln">28   </span></a><span class="s0"># unfrozen packages, the frozen ones do not contain source .py files, which are therefore absent from content listings.</span>
+<a name="l29"><span class="ln">29   </span></a>
+<a name="l30"><span class="ln">30   </span></a>
+<a name="l31"><span class="ln">31   </span></a><span class="s2">def </span><span class="s1">_pyi_rthook</span><span class="s3">():</span>
+<a name="l32"><span class="ln">32   </span></a>    <span class="s2">import </span><span class="s1">os</span>
+<a name="l33"><span class="ln">33   </span></a>    <span class="s2">import </span><span class="s1">pathlib</span>
+<a name="l34"><span class="ln">34   </span></a>    <span class="s2">import </span><span class="s1">sys</span>
+<a name="l35"><span class="ln">35   </span></a>
+<a name="l36"><span class="ln">36   </span></a>    <span class="s2">import </span><span class="s1">pkg_resources</span>
+<a name="l37"><span class="ln">37   </span></a>    <span class="s2">from </span><span class="s1">pyimod02_importers </span><span class="s2">import </span><span class="s1">PyiFrozenImporter</span>
+<a name="l38"><span class="ln">38   </span></a>
+<a name="l39"><span class="ln">39   </span></a>    <span class="s1">SYS_PREFIX </span><span class="s3">= </span><span class="s1">pathlib</span><span class="s3">.</span><span class="s1">PurePath</span><span class="s3">(</span><span class="s1">sys</span><span class="s3">.</span><span class="s1">_MEIPASS</span><span class="s3">)</span>
+<a name="l40"><span class="ln">40   </span></a>
+<a name="l41"><span class="ln">41   </span></a>    <span class="s2">class </span><span class="s1">_TocFilesystem</span><span class="s3">:</span>
+<a name="l42"><span class="ln">42   </span></a>        <span class="s4">&quot;&quot;&quot; 
+<a name="l43"><span class="ln">43   </span></a>        A prefix tree implementation for embedded filesystem reconstruction. 
+<a name="l44"><span class="ln">44   </span></a> 
+<a name="l45"><span class="ln">45   </span></a>        NOTE: as of PyInstaller 6.0, the embedded PYZ archive cannot contain data files anymore. Instead, it contains 
+<a name="l46"><span class="ln">46   </span></a>        only .pyc modules - which are by design not returned by `PyiFrozenProvider`. So this implementation has been 
+<a name="l47"><span class="ln">47   </span></a>        reduced to supporting only directories implied by collected packages. 
+<a name="l48"><span class="ln">48   </span></a>        &quot;&quot;&quot;</span>
+<a name="l49"><span class="ln">49   </span></a>        <span class="s2">def </span><span class="s1">__init__</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">tree_node</span><span class="s3">):</span>
+<a name="l50"><span class="ln">50   </span></a>            <span class="s1">self</span><span class="s3">.</span><span class="s1">_tree </span><span class="s3">= </span><span class="s1">tree_node</span>
+<a name="l51"><span class="ln">51   </span></a>
+<a name="l52"><span class="ln">52   </span></a>        <span class="s2">def </span><span class="s1">_get_tree_node</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">path</span><span class="s3">):</span>
+<a name="l53"><span class="ln">53   </span></a>            <span class="s1">path </span><span class="s3">= </span><span class="s1">pathlib</span><span class="s3">.</span><span class="s1">PurePath</span><span class="s3">(</span><span class="s1">path</span><span class="s3">)</span>
+<a name="l54"><span class="ln">54   </span></a>            <span class="s1">current </span><span class="s3">= </span><span class="s1">self</span><span class="s3">.</span><span class="s1">_tree</span>
+<a name="l55"><span class="ln">55   </span></a>            <span class="s2">for </span><span class="s1">component </span><span class="s2">in </span><span class="s1">path</span><span class="s3">.</span><span class="s1">parts</span><span class="s3">:</span>
+<a name="l56"><span class="ln">56   </span></a>                <span class="s2">if </span><span class="s1">component </span><span class="s2">not in </span><span class="s1">current</span><span class="s3">:</span>
+<a name="l57"><span class="ln">57   </span></a>                    <span class="s2">return None</span>
+<a name="l58"><span class="ln">58   </span></a>                <span class="s1">current </span><span class="s3">= </span><span class="s1">current</span><span class="s3">[</span><span class="s1">component</span><span class="s3">]</span>
+<a name="l59"><span class="ln">59   </span></a>            <span class="s2">return </span><span class="s1">current</span>
+<a name="l60"><span class="ln">60   </span></a>
+<a name="l61"><span class="ln">61   </span></a>        <span class="s2">def </span><span class="s1">path_exists</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">path</span><span class="s3">):</span>
+<a name="l62"><span class="ln">62   </span></a>            <span class="s1">node </span><span class="s3">= </span><span class="s1">self</span><span class="s3">.</span><span class="s1">_get_tree_node</span><span class="s3">(</span><span class="s1">path</span><span class="s3">)</span>
+<a name="l63"><span class="ln">63   </span></a>            <span class="s2">return </span><span class="s1">isinstance</span><span class="s3">(</span><span class="s1">node</span><span class="s3">, </span><span class="s1">dict</span><span class="s3">)  </span><span class="s0"># Directory only</span>
+<a name="l64"><span class="ln">64   </span></a>
+<a name="l65"><span class="ln">65   </span></a>        <span class="s2">def </span><span class="s1">path_isdir</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">path</span><span class="s3">):</span>
+<a name="l66"><span class="ln">66   </span></a>            <span class="s1">node </span><span class="s3">= </span><span class="s1">self</span><span class="s3">.</span><span class="s1">_get_tree_node</span><span class="s3">(</span><span class="s1">path</span><span class="s3">)</span>
+<a name="l67"><span class="ln">67   </span></a>            <span class="s2">return </span><span class="s1">isinstance</span><span class="s3">(</span><span class="s1">node</span><span class="s3">, </span><span class="s1">dict</span><span class="s3">)  </span><span class="s0"># Directory only</span>
+<a name="l68"><span class="ln">68   </span></a>
+<a name="l69"><span class="ln">69   </span></a>        <span class="s2">def </span><span class="s1">path_listdir</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">path</span><span class="s3">):</span>
+<a name="l70"><span class="ln">70   </span></a>            <span class="s1">node </span><span class="s3">= </span><span class="s1">self</span><span class="s3">.</span><span class="s1">_get_tree_node</span><span class="s3">(</span><span class="s1">path</span><span class="s3">)</span>
+<a name="l71"><span class="ln">71   </span></a>            <span class="s2">if not </span><span class="s1">isinstance</span><span class="s3">(</span><span class="s1">node</span><span class="s3">, </span><span class="s1">dict</span><span class="s3">):</span>
+<a name="l72"><span class="ln">72   </span></a>                <span class="s2">return </span><span class="s3">[]  </span><span class="s0"># Non-existent or file</span>
+<a name="l73"><span class="ln">73   </span></a>            <span class="s0"># Return only sub-directories</span>
+<a name="l74"><span class="ln">74   </span></a>            <span class="s2">return </span><span class="s3">[</span><span class="s1">entry_name </span><span class="s2">for </span><span class="s1">entry_name</span><span class="s3">, </span><span class="s1">entry_data </span><span class="s2">in </span><span class="s1">node</span><span class="s3">.</span><span class="s1">items</span><span class="s3">() </span><span class="s2">if </span><span class="s1">isinstance</span><span class="s3">(</span><span class="s1">entry_data</span><span class="s3">, </span><span class="s1">dict</span><span class="s3">)]</span>
+<a name="l75"><span class="ln">75   </span></a>
+<a name="l76"><span class="ln">76   </span></a>    <span class="s2">class </span><span class="s1">PyiFrozenProvider</span><span class="s3">(</span><span class="s1">pkg_resources</span><span class="s3">.</span><span class="s1">NullProvider</span><span class="s3">):</span>
+<a name="l77"><span class="ln">77   </span></a>        <span class="s4">&quot;&quot;&quot; 
+<a name="l78"><span class="ln">78   </span></a>        Custom pkg_resources provider for PyiFrozenImporter. 
+<a name="l79"><span class="ln">79   </span></a>        &quot;&quot;&quot;</span>
+<a name="l80"><span class="ln">80   </span></a>        <span class="s2">def </span><span class="s1">__init__</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">module</span><span class="s3">):</span>
+<a name="l81"><span class="ln">81   </span></a>            <span class="s1">super</span><span class="s3">().</span><span class="s1">__init__</span><span class="s3">(</span><span class="s1">module</span><span class="s3">)</span>
+<a name="l82"><span class="ln">82   </span></a>
+<a name="l83"><span class="ln">83   </span></a>            <span class="s0"># Get top-level path; if &quot;module&quot; corresponds to a package, we need the path to the package itself.</span>
+<a name="l84"><span class="ln">84   </span></a>            <span class="s0"># If &quot;module&quot; is a submodule in a package, we need the path to the parent package.</span>
+<a name="l85"><span class="ln">85   </span></a>            <span class="s0">#</span>
+<a name="l86"><span class="ln">86   </span></a>            <span class="s0"># This is equivalent to `pkg_resources.NullProvider.module_path`, except we construct a `pathlib.PurePath`</span>
+<a name="l87"><span class="ln">87   </span></a>            <span class="s0"># for easier manipulation.</span>
+<a name="l88"><span class="ln">88   </span></a>            <span class="s0">#</span>
+<a name="l89"><span class="ln">89   </span></a>            <span class="s0"># NOTE: the path is NOT resolved for symbolic links, as neither are paths that are passed by `pkg_resources`</span>
+<a name="l90"><span class="ln">90   </span></a>            <span class="s0"># to `_has`, `_isdir`, `_listdir` (they are all anchored to `module_path`, which in turn is just</span>
+<a name="l91"><span class="ln">91   </span></a>            <span class="s0"># `os.path.dirname(module.__file__)`. As `__file__` returned by `PyiFrozenImporter` is always anchored to</span>
+<a name="l92"><span class="ln">92   </span></a>            <span class="s0"># `sys._MEIPASS`, we do not have to worry about cross-linked directories in macOS .app bundles, where the</span>
+<a name="l93"><span class="ln">93   </span></a>            <span class="s0"># resolved `__file__` could be either in the `Contents/Frameworks` directory (the &quot;true&quot; `sys._MEIPASS`), or</span>
+<a name="l94"><span class="ln">94   </span></a>            <span class="s0"># in the `Contents/Resources` directory due to cross-linking.</span>
+<a name="l95"><span class="ln">95   </span></a>            <span class="s1">self</span><span class="s3">.</span><span class="s1">_pkg_path </span><span class="s3">= </span><span class="s1">pathlib</span><span class="s3">.</span><span class="s1">PurePath</span><span class="s3">(</span><span class="s1">module</span><span class="s3">.</span><span class="s1">__file__</span><span class="s3">).</span><span class="s1">parent</span>
+<a name="l96"><span class="ln">96   </span></a>
+<a name="l97"><span class="ln">97   </span></a>            <span class="s0"># Construct _TocFilesystem on top of pre-computed prefix tree provided by PyiFrozenImporter.</span>
+<a name="l98"><span class="ln">98   </span></a>            <span class="s1">self</span><span class="s3">.</span><span class="s1">embedded_tree </span><span class="s3">= </span><span class="s1">_TocFilesystem</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">loader</span><span class="s3">.</span><span class="s1">toc_tree</span><span class="s3">)</span>
+<a name="l99"><span class="ln">99   </span></a>
+<a name="l100"><span class="ln">100  </span></a>        <span class="s2">def </span><span class="s1">_normalize_path</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">path</span><span class="s3">):</span>
+<a name="l101"><span class="ln">101  </span></a>            <span class="s0"># Avoid using `Path.resolve`, because it resolves symlinks. This is undesirable, because the pure path in</span>
+<a name="l102"><span class="ln">102  </span></a>            <span class="s0"># `self._pkg_path` does not have symlinks resolved, so comparison between the two would be faulty. Instead,</span>
+<a name="l103"><span class="ln">103  </span></a>            <span class="s0"># use `os.path.normpath` to normalize the path and get rid of any '..' elements (the path itself should</span>
+<a name="l104"><span class="ln">104  </span></a>            <span class="s0"># already be absolute).</span>
+<a name="l105"><span class="ln">105  </span></a>            <span class="s2">return </span><span class="s1">pathlib</span><span class="s3">.</span><span class="s1">Path</span><span class="s3">(</span><span class="s1">os</span><span class="s3">.</span><span class="s1">path</span><span class="s3">.</span><span class="s1">normpath</span><span class="s3">(</span><span class="s1">path</span><span class="s3">))</span>
+<a name="l106"><span class="ln">106  </span></a>
+<a name="l107"><span class="ln">107  </span></a>        <span class="s2">def </span><span class="s1">_is_relative_to_package</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">path</span><span class="s3">):</span>
+<a name="l108"><span class="ln">108  </span></a>            <span class="s2">return </span><span class="s1">path </span><span class="s3">== </span><span class="s1">self</span><span class="s3">.</span><span class="s1">_pkg_path </span><span class="s2">or </span><span class="s1">self</span><span class="s3">.</span><span class="s1">_pkg_path </span><span class="s2">in </span><span class="s1">path</span><span class="s3">.</span><span class="s1">parents</span>
+<a name="l109"><span class="ln">109  </span></a>
+<a name="l110"><span class="ln">110  </span></a>        <span class="s2">def </span><span class="s1">_has</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">path</span><span class="s3">):</span>
+<a name="l111"><span class="ln">111  </span></a>            <span class="s0"># Prevent access outside the package.</span>
+<a name="l112"><span class="ln">112  </span></a>            <span class="s1">path </span><span class="s3">= </span><span class="s1">self</span><span class="s3">.</span><span class="s1">_normalize_path</span><span class="s3">(</span><span class="s1">path</span><span class="s3">)</span>
+<a name="l113"><span class="ln">113  </span></a>            <span class="s2">if not </span><span class="s1">self</span><span class="s3">.</span><span class="s1">_is_relative_to_package</span><span class="s3">(</span><span class="s1">path</span><span class="s3">):</span>
+<a name="l114"><span class="ln">114  </span></a>                <span class="s2">return False</span>
+<a name="l115"><span class="ln">115  </span></a>
+<a name="l116"><span class="ln">116  </span></a>            <span class="s0"># Check the filesystem first to avoid unnecessarily computing the relative path...</span>
+<a name="l117"><span class="ln">117  </span></a>            <span class="s2">if </span><span class="s1">path</span><span class="s3">.</span><span class="s1">exists</span><span class="s3">():</span>
+<a name="l118"><span class="ln">118  </span></a>                <span class="s2">return True</span>
+<a name="l119"><span class="ln">119  </span></a>            <span class="s1">rel_path </span><span class="s3">= </span><span class="s1">path</span><span class="s3">.</span><span class="s1">relative_to</span><span class="s3">(</span><span class="s1">SYS_PREFIX</span><span class="s3">)</span>
+<a name="l120"><span class="ln">120  </span></a>            <span class="s2">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">embedded_tree</span><span class="s3">.</span><span class="s1">path_exists</span><span class="s3">(</span><span class="s1">rel_path</span><span class="s3">)</span>
+<a name="l121"><span class="ln">121  </span></a>
+<a name="l122"><span class="ln">122  </span></a>        <span class="s2">def </span><span class="s1">_isdir</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">path</span><span class="s3">):</span>
+<a name="l123"><span class="ln">123  </span></a>            <span class="s0"># Prevent access outside the package.</span>
+<a name="l124"><span class="ln">124  </span></a>            <span class="s1">path </span><span class="s3">= </span><span class="s1">self</span><span class="s3">.</span><span class="s1">_normalize_path</span><span class="s3">(</span><span class="s1">path</span><span class="s3">)</span>
+<a name="l125"><span class="ln">125  </span></a>            <span class="s2">if not </span><span class="s1">self</span><span class="s3">.</span><span class="s1">_is_relative_to_package</span><span class="s3">(</span><span class="s1">path</span><span class="s3">):</span>
+<a name="l126"><span class="ln">126  </span></a>                <span class="s2">return False</span>
+<a name="l127"><span class="ln">127  </span></a>
+<a name="l128"><span class="ln">128  </span></a>            <span class="s0"># Embedded resources have precedence over filesystem...</span>
+<a name="l129"><span class="ln">129  </span></a>            <span class="s1">rel_path </span><span class="s3">= </span><span class="s1">path</span><span class="s3">.</span><span class="s1">relative_to</span><span class="s3">(</span><span class="s1">SYS_PREFIX</span><span class="s3">)</span>
+<a name="l130"><span class="ln">130  </span></a>            <span class="s1">node </span><span class="s3">= </span><span class="s1">self</span><span class="s3">.</span><span class="s1">embedded_tree</span><span class="s3">.</span><span class="s1">_get_tree_node</span><span class="s3">(</span><span class="s1">rel_path</span><span class="s3">)</span>
+<a name="l131"><span class="ln">131  </span></a>            <span class="s2">if </span><span class="s1">node </span><span class="s2">is None</span><span class="s3">:</span>
+<a name="l132"><span class="ln">132  </span></a>                <span class="s2">return </span><span class="s1">path</span><span class="s3">.</span><span class="s1">is_dir</span><span class="s3">()  </span><span class="s0"># No match found; try the filesystem.</span>
+<a name="l133"><span class="ln">133  </span></a>            <span class="s2">else</span><span class="s3">:</span>
+<a name="l134"><span class="ln">134  </span></a>                <span class="s0"># str = file, dict = directory</span>
+<a name="l135"><span class="ln">135  </span></a>                <span class="s2">return not </span><span class="s1">isinstance</span><span class="s3">(</span><span class="s1">node</span><span class="s3">, </span><span class="s1">str</span><span class="s3">)</span>
+<a name="l136"><span class="ln">136  </span></a>
+<a name="l137"><span class="ln">137  </span></a>        <span class="s2">def </span><span class="s1">_listdir</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">path</span><span class="s3">):</span>
+<a name="l138"><span class="ln">138  </span></a>            <span class="s0"># Prevent access outside the package.</span>
+<a name="l139"><span class="ln">139  </span></a>            <span class="s1">path </span><span class="s3">= </span><span class="s1">self</span><span class="s3">.</span><span class="s1">_normalize_path</span><span class="s3">(</span><span class="s1">path</span><span class="s3">)</span>
+<a name="l140"><span class="ln">140  </span></a>            <span class="s2">if not </span><span class="s1">self</span><span class="s3">.</span><span class="s1">_is_relative_to_package</span><span class="s3">(</span><span class="s1">path</span><span class="s3">):</span>
+<a name="l141"><span class="ln">141  </span></a>                <span class="s2">return </span><span class="s3">[]</span>
+<a name="l142"><span class="ln">142  </span></a>
+<a name="l143"><span class="ln">143  </span></a>            <span class="s0"># Relative path for searching embedded resources.</span>
+<a name="l144"><span class="ln">144  </span></a>            <span class="s1">rel_path </span><span class="s3">= </span><span class="s1">path</span><span class="s3">.</span><span class="s1">relative_to</span><span class="s3">(</span><span class="s1">SYS_PREFIX</span><span class="s3">)</span>
+<a name="l145"><span class="ln">145  </span></a>            <span class="s0"># List content from embedded filesystem...</span>
+<a name="l146"><span class="ln">146  </span></a>            <span class="s1">content </span><span class="s3">= </span><span class="s1">self</span><span class="s3">.</span><span class="s1">embedded_tree</span><span class="s3">.</span><span class="s1">path_listdir</span><span class="s3">(</span><span class="s1">rel_path</span><span class="s3">)</span>
+<a name="l147"><span class="ln">147  </span></a>            <span class="s0"># ... as well as the actual one.</span>
+<a name="l148"><span class="ln">148  </span></a>            <span class="s2">if </span><span class="s1">path</span><span class="s3">.</span><span class="s1">is_dir</span><span class="s3">():</span>
+<a name="l149"><span class="ln">149  </span></a>                <span class="s0"># Use os.listdir() to avoid having to convert Path objects to strings... Also make sure to de-duplicate</span>
+<a name="l150"><span class="ln">150  </span></a>                <span class="s0"># the results.</span>
+<a name="l151"><span class="ln">151  </span></a>                <span class="s1">path </span><span class="s3">= </span><span class="s1">str</span><span class="s3">(</span><span class="s1">path</span><span class="s3">)  </span><span class="s0"># not is_py36</span>
+<a name="l152"><span class="ln">152  </span></a>                <span class="s1">content </span><span class="s3">= </span><span class="s1">list</span><span class="s3">(</span><span class="s1">set</span><span class="s3">(</span><span class="s1">content </span><span class="s3">+ </span><span class="s1">os</span><span class="s3">.</span><span class="s1">listdir</span><span class="s3">(</span><span class="s1">path</span><span class="s3">)))</span>
+<a name="l153"><span class="ln">153  </span></a>            <span class="s2">return </span><span class="s1">content</span>
+<a name="l154"><span class="ln">154  </span></a>
+<a name="l155"><span class="ln">155  </span></a>    <span class="s1">pkg_resources</span><span class="s3">.</span><span class="s1">register_loader_type</span><span class="s3">(</span><span class="s1">PyiFrozenImporter</span><span class="s3">, </span><span class="s1">PyiFrozenProvider</span><span class="s3">)</span>
+<a name="l156"><span class="ln">156  </span></a>
+<a name="l157"><span class="ln">157  </span></a>
+<a name="l158"><span class="ln">158  </span></a><span class="s1">_pyi_rthook</span><span class="s3">()</span>
+<a name="l159"><span class="ln">159  </span></a><span class="s2">del </span><span class="s1">_pyi_rthook</span>
+<a name="l160"><span class="ln">160  </span></a></pre>
+</body>
+</html>

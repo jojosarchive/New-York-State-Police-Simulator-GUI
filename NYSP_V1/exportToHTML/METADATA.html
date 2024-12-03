@@ -1,0 +1,391 @@
+<html>
+<head>
+<title>METADATA</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #bcbec4;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+METADATA</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0">Metadata-Version: 2.1</span>
+<a name="l2"><span class="ln">2    </span></a><span class="s0">Name: pyinstaller-hooks-contrib</span>
+<a name="l3"><span class="ln">3    </span></a><span class="s0">Version: 2024.6</span>
+<a name="l4"><span class="ln">4    </span></a><span class="s0">Summary: Community maintained hooks for PyInstaller</span>
+<a name="l5"><span class="ln">5    </span></a><span class="s0">Home-page: https://github.com/pyinstaller/pyinstaller-hooks-contrib</span>
+<a name="l6"><span class="ln">6    </span></a><span class="s0">Download-URL: https://pypi.org/project/pyinstaller-hooks-contrib</span>
+<a name="l7"><span class="ln">7    </span></a><span class="s0">Maintainer: Legorooj</span>
+<a name="l8"><span class="ln">8    </span></a><span class="s0">Maintainer-email: legorooj@protonmail.com</span>
+<a name="l9"><span class="ln">9    </span></a><span class="s0">Keywords: pyinstaller development hooks</span>
+<a name="l10"><span class="ln">10   </span></a><span class="s0">Classifier: Intended Audience :: Developers</span>
+<a name="l11"><span class="ln">11   </span></a><span class="s0">Classifier: Topic :: Software Development :: Build Tools</span>
+<a name="l12"><span class="ln">12   </span></a><span class="s0">Classifier: License :: OSI Approved :: Apache Software License</span>
+<a name="l13"><span class="ln">13   </span></a><span class="s0">Classifier: License :: OSI Approved :: GNU General Public License v2 (GPLv2)</span>
+<a name="l14"><span class="ln">14   </span></a><span class="s0">Classifier: Natural Language :: English</span>
+<a name="l15"><span class="ln">15   </span></a><span class="s0">Classifier: Operating System :: OS Independent</span>
+<a name="l16"><span class="ln">16   </span></a><span class="s0">Classifier: Programming Language :: Python</span>
+<a name="l17"><span class="ln">17   </span></a><span class="s0">Classifier: Programming Language :: Python :: 3</span>
+<a name="l18"><span class="ln">18   </span></a><span class="s0">Requires-Python: &gt;=3.7</span>
+<a name="l19"><span class="ln">19   </span></a><span class="s0">Description-Content-Type: text/markdown</span>
+<a name="l20"><span class="ln">20   </span></a><span class="s0">License-File: LICENSE</span>
+<a name="l21"><span class="ln">21   </span></a><span class="s0">License-File: LICENSE.APL.txt</span>
+<a name="l22"><span class="ln">22   </span></a><span class="s0">License-File: LICENSE.GPL.txt</span>
+<a name="l23"><span class="ln">23   </span></a><span class="s0">Requires-Dist: setuptools &gt;=42.0.0</span>
+<a name="l24"><span class="ln">24   </span></a><span class="s0">Requires-Dist: packaging &gt;=22.0</span>
+<a name="l25"><span class="ln">25   </span></a><span class="s0">Requires-Dist: importlib-metadata &gt;=4.6 ; python_version &lt; &quot;3.10&quot;</span>
+<a name="l26"><span class="ln">26   </span></a>
+<a name="l27"><span class="ln">27   </span></a><span class="s0"># `pyinstaller-hooks-contrib`: The PyInstaller community hooks repository</span>
+<a name="l28"><span class="ln">28   </span></a>
+<a name="l29"><span class="ln">29   </span></a><span class="s0">What happens when (your?) package doesn't work with PyInstaller? Say you have data files that you need at runtime?</span>
+<a name="l30"><span class="ln">30   </span></a><span class="s0">PyInstaller doesn't bundle those. Your package requires others which PyInstaller can't see? How do you fix that?</span>
+<a name="l31"><span class="ln">31   </span></a>
+<a name="l32"><span class="ln">32   </span></a><span class="s0">In summary, a &quot;hook&quot; file extends PyInstaller to adapt it to the special needs and methods used by a Python package.</span>
+<a name="l33"><span class="ln">33   </span></a><span class="s0">The word &quot;hook&quot; is used for two kinds of files. A runtime hook helps the bootloader to launch an app, setting up the</span>
+<a name="l34"><span class="ln">34   </span></a><span class="s0">environment. A package hook (there are several types of those) tells PyInstaller what to include in the final app -</span>
+<a name="l35"><span class="ln">35   </span></a><span class="s0">such as the data files and (hidden) imports mentioned above.</span>
+<a name="l36"><span class="ln">36   </span></a>
+<a name="l37"><span class="ln">37   </span></a><span class="s0">This repository is a collection of hooks for many packages, and allows PyInstaller to work with these packages</span>
+<a name="l38"><span class="ln">38   </span></a><span class="s0">seamlessly.</span>
+<a name="l39"><span class="ln">39   </span></a>
+<a name="l40"><span class="ln">40   </span></a>
+<a name="l41"><span class="ln">41   </span></a><span class="s0">## Installation</span>
+<a name="l42"><span class="ln">42   </span></a>
+<a name="l43"><span class="ln">43   </span></a><span class="s0">`pyinstaller-hooks-contrib` is automatically installed when you install PyInstaller, or can be installed with pip:</span>
+<a name="l44"><span class="ln">44   </span></a>
+<a name="l45"><span class="ln">45   </span></a><span class="s0">```commandline</span>
+<a name="l46"><span class="ln">46   </span></a><span class="s0">pip install -U pyinstaller-hooks-contrib</span>
+<a name="l47"><span class="ln">47   </span></a><span class="s0">```</span>
+<a name="l48"><span class="ln">48   </span></a>
+<a name="l49"><span class="ln">49   </span></a>
+<a name="l50"><span class="ln">50   </span></a><span class="s0">## I can't see a hook for `a-package`</span>
+<a name="l51"><span class="ln">51   </span></a>
+<a name="l52"><span class="ln">52   </span></a><span class="s0">Either `a-package` works fine without a hook, or no-one has contributed hooks.</span>
+<a name="l53"><span class="ln">53   </span></a><span class="s0">If you'd like to add a hook, or view information about hooks,</span>
+<a name="l54"><span class="ln">54   </span></a><span class="s0">please see below.</span>
+<a name="l55"><span class="ln">55   </span></a>
+<a name="l56"><span class="ln">56   </span></a>
+<a name="l57"><span class="ln">57   </span></a><span class="s0">## Hook configuration (options)</span>
+<a name="l58"><span class="ln">58   </span></a>
+<a name="l59"><span class="ln">59   </span></a><span class="s0">Hooks that support configuration (options) and their options are documented in</span>
+<a name="l60"><span class="ln">60   </span></a><span class="s0">[Supported hooks and options](hooks-config.rst).</span>
+<a name="l61"><span class="ln">61   </span></a>
+<a name="l62"><span class="ln">62   </span></a>
+<a name="l63"><span class="ln">63   </span></a><span class="s0">## I want to help!</span>
+<a name="l64"><span class="ln">64   </span></a>
+<a name="l65"><span class="ln">65   </span></a><span class="s0">If you've got a hook you want to share then great!</span>
+<a name="l66"><span class="ln">66   </span></a><span class="s0">The rest of this page will walk you through the process of contributing a hook.</span>
+<a name="l67"><span class="ln">67   </span></a><span class="s0">If you've been here before then you may want to skip to the [summary checklist](#summary)</span>
+<a name="l68"><span class="ln">68   </span></a>
+<a name="l69"><span class="ln">69   </span></a><span class="s0">**Unless you are very comfortable with `git rebase -i`, please provide one hook per pull request!**</span>
+<a name="l70"><span class="ln">70   </span></a><span class="s0">**If you have more than one then submit them in separate pull requests.**</span>
+<a name="l71"><span class="ln">71   </span></a>
+<a name="l72"><span class="ln">72   </span></a>
+<a name="l73"><span class="ln">73   </span></a><span class="s0">### Setup</span>
+<a name="l74"><span class="ln">74   </span></a>
+<a name="l75"><span class="ln">75   </span></a><span class="s0">[Fork this repo](https://github.com/pyinstaller/pyinstaller-hooks-contrib/fork) if you haven't already done so.</span>
+<a name="l76"><span class="ln">76   </span></a><span class="s0">(If you have a fork already but its old, click the **Fetch upstream** button on your fork's homepage.)</span>
+<a name="l77"><span class="ln">77   </span></a><span class="s0">Clone and `cd` inside your fork by running the following (replacing `bob-the-barnacle` with your github username):</span>
+<a name="l78"><span class="ln">78   </span></a>
+<a name="l79"><span class="ln">79   </span></a><span class="s0">```</span>
+<a name="l80"><span class="ln">80   </span></a><span class="s0">git clone https://github.com/bob-the-barnacle/pyinstaller-hoooks-contrib.git</span>
+<a name="l81"><span class="ln">81   </span></a><span class="s0">cd pyinstaller-hooks-contrib</span>
+<a name="l82"><span class="ln">82   </span></a><span class="s0">```</span>
+<a name="l83"><span class="ln">83   </span></a>
+<a name="l84"><span class="ln">84   </span></a><span class="s0">Create a new branch for you changes (replacing `foo` with the name of the package):</span>
+<a name="l85"><span class="ln">85   </span></a><span class="s0">You can name this branch whatever you like.</span>
+<a name="l86"><span class="ln">86   </span></a>
+<a name="l87"><span class="ln">87   </span></a><span class="s0">```</span>
+<a name="l88"><span class="ln">88   </span></a><span class="s0">git checkout -b hook-for-foo</span>
+<a name="l89"><span class="ln">89   </span></a><span class="s0">```</span>
+<a name="l90"><span class="ln">90   </span></a>
+<a name="l91"><span class="ln">91   </span></a><span class="s0">If you wish to create a virtual environment then do it now before proceeding to the next step.</span>
+<a name="l92"><span class="ln">92   </span></a>
+<a name="l93"><span class="ln">93   </span></a><span class="s0">Install this repo in editable mode.</span>
+<a name="l94"><span class="ln">94   </span></a><span class="s0">This will overwrite your current installation.</span>
+<a name="l95"><span class="ln">95   </span></a><span class="s0">(Note that you can reverse this with `pip install --force-reinstall pyinstaller-hooks-contrib`).</span>
+<a name="l96"><span class="ln">96   </span></a>
+<a name="l97"><span class="ln">97   </span></a><span class="s0">```</span>
+<a name="l98"><span class="ln">98   </span></a><span class="s0">pip install -e .</span>
+<a name="l99"><span class="ln">99   </span></a><span class="s0">pip install -r requirements-test.txt</span>
+<a name="l100"><span class="ln">100  </span></a><span class="s0">pip install flake8 pyinstaller</span>
+<a name="l101"><span class="ln">101  </span></a><span class="s0">```</span>
+<a name="l102"><span class="ln">102  </span></a>
+<a name="l103"><span class="ln">103  </span></a><span class="s0">Note that on macOS and Linux, `pip` may by called `pip3`.</span>
+<a name="l104"><span class="ln">104  </span></a><span class="s0">If you normally use `pip3` and `python3` then use `pip3` here too.</span>
+<a name="l105"><span class="ln">105  </span></a><span class="s0">You may skip the 2&lt;sup&gt;nd&lt;/sup&gt; line if you have no intention of providing tests (but please do provide tests!).</span>
+<a name="l106"><span class="ln">106  </span></a>
+<a name="l107"><span class="ln">107  </span></a>
+<a name="l108"><span class="ln">108  </span></a><span class="s0">### Add the hook</span>
+<a name="l109"><span class="ln">109  </span></a>
+<a name="l110"><span class="ln">110  </span></a><span class="s0">Standard hooks live in the [src/_pyinstaller_hooks_contrib/hooks/stdhooks/](../master/src/_pyinstaller_hooks_contrib/hooks/stdhooks/) directory.</span>
+<a name="l111"><span class="ln">111  </span></a><span class="s0">Runtime hooks live in the [src/_pyinstaller_hooks_contrib/hooks/rthooks/](../master/src/_pyinstaller_hooks_contrib/hooks/rthooks/) directory.</span>
+<a name="l112"><span class="ln">112  </span></a><span class="s0">Simply copy your hook into there.</span>
+<a name="l113"><span class="ln">113  </span></a><span class="s0">If you're unsure if your hook is a runtime hook then it almost certainly is a standard hook.</span>
+<a name="l114"><span class="ln">114  </span></a>
+<a name="l115"><span class="ln">115  </span></a><span class="s0">Please annotate (with comments) anything unusual in the hook.</span>
+<a name="l116"><span class="ln">116  </span></a><span class="s0">*Unusual* here is defined as any of the following:</span>
+<a name="l117"><span class="ln">117  </span></a>
+<a name="l118"><span class="ln">118  </span></a><span class="s0">*   Long lists of `hiddenimport` submodules.</span>
+<a name="l119"><span class="ln">119  </span></a>    <span class="s0">If you need lots of hidden imports then use [`collect_submodules('foo')`](https://pyinstaller.readthedocs.io/en/latest/hooks.html#PyInstaller.utils.hooks.collect_submodules).</span>
+<a name="l120"><span class="ln">120  </span></a>    <span class="s0">For bonus points, track down why so many submodules are hidden. Typical causes are:</span>
+<a name="l121"><span class="ln">121  </span></a>    <span class="s0">*   Lazily loaded submodules (`importlib.importmodule()` inside a module `__getattr__()`).</span>
+<a name="l122"><span class="ln">122  </span></a>    <span class="s0">*   Dynamically loaded *backends*.</span>
+<a name="l123"><span class="ln">123  </span></a>    <span class="s0">*   Usage of `Cython` or Python extension modules containing `import` statements.</span>
+<a name="l124"><span class="ln">124  </span></a><span class="s0">*   Use of [`collect_all()`](https://pyinstaller.readthedocs.io/en/latest/hooks.html#PyInstaller.utils.hooks.collect_all).</span>
+<a name="l125"><span class="ln">125  </span></a>    <span class="s0">This function's performance is abismal and [it is broken by</span>
+<a name="l126"><span class="ln">126  </span></a>    <span class="s0">design](https://github.com/pyinstaller/pyinstaller/issues/6458#issuecomment-1000481631) because it confuses</span>
+<a name="l127"><span class="ln">127  </span></a>    <span class="s0">packages with distributions.</span>
+<a name="l128"><span class="ln">128  </span></a>    <span class="s0">Check that you really do need to collect all of submodules, data files, binaries, metadata and dependencies.</span>
+<a name="l129"><span class="ln">129  </span></a>    <span class="s0">If you do then add a comment to say so (and if you know it - why).</span>
+<a name="l130"><span class="ln">130  </span></a>    <span class="s0">Do not simply use `collect_all()` just to *future proof* the hook.</span>
+<a name="l131"><span class="ln">131  </span></a><span class="s0">*   Any complicated `os.path` arithmetic (by which I simply mean overly complex filename manipulations).</span>
+<a name="l132"><span class="ln">132  </span></a>
+<a name="l133"><span class="ln">133  </span></a>
+<a name="l134"><span class="ln">134  </span></a><span class="s0">#### Add the copyright header</span>
+<a name="l135"><span class="ln">135  </span></a>
+<a name="l136"><span class="ln">136  </span></a><span class="s0">All source files must contain the copyright header to be covered by our terms and conditions.</span>
+<a name="l137"><span class="ln">137  </span></a>
+<a name="l138"><span class="ln">138  </span></a><span class="s0">If you are **adding** a new hook (or any new python file), copy/paste the appropriate copyright header (below) at the top</span>
+<a name="l139"><span class="ln">139  </span></a><span class="s0">replacing 2021 with the current year.</span>
+<a name="l140"><span class="ln">140  </span></a>
+<a name="l141"><span class="ln">141  </span></a><span class="s0">&lt;details&gt;&lt;summary&gt;GPL 2 header for standard hooks or other Python files.&lt;/summary&gt;</span>
+<a name="l142"><span class="ln">142  </span></a>
+<a name="l143"><span class="ln">143  </span></a><span class="s0">```python</span>
+<a name="l144"><span class="ln">144  </span></a><span class="s0"># ------------------------------------------------------------------</span>
+<a name="l145"><span class="ln">145  </span></a><span class="s0"># Copyright (c) 2021 PyInstaller Development Team.</span>
+<a name="l146"><span class="ln">146  </span></a><span class="s0">#</span>
+<a name="l147"><span class="ln">147  </span></a><span class="s0"># This file is distributed under the terms of the GNU General Public</span>
+<a name="l148"><span class="ln">148  </span></a><span class="s0"># License (version 2.0 or later).</span>
+<a name="l149"><span class="ln">149  </span></a><span class="s0">#</span>
+<a name="l150"><span class="ln">150  </span></a><span class="s0"># The full license is available in LICENSE.GPL.txt, distributed with</span>
+<a name="l151"><span class="ln">151  </span></a><span class="s0"># this software.</span>
+<a name="l152"><span class="ln">152  </span></a><span class="s0">#</span>
+<a name="l153"><span class="ln">153  </span></a><span class="s0"># SPDX-License-Identifier: GPL-2.0-or-later</span>
+<a name="l154"><span class="ln">154  </span></a><span class="s0"># ------------------------------------------------------------------</span>
+<a name="l155"><span class="ln">155  </span></a><span class="s0">```</span>
+<a name="l156"><span class="ln">156  </span></a>
+<a name="l157"><span class="ln">157  </span></a><span class="s0">&lt;/details&gt;</span>
+<a name="l158"><span class="ln">158  </span></a>
+<a name="l159"><span class="ln">159  </span></a><span class="s0">&lt;details&gt;&lt;summary&gt;APL header for runtime hooks only.</span>
+<a name="l160"><span class="ln">160  </span></a><span class="s0">Again, if you're unsure if your hook is a runtime hook then it'll be a standard hook.&lt;/summary&gt;</span>
+<a name="l161"><span class="ln">161  </span></a>
+<a name="l162"><span class="ln">162  </span></a><span class="s0">```python</span>
+<a name="l163"><span class="ln">163  </span></a><span class="s0"># ------------------------------------------------------------------</span>
+<a name="l164"><span class="ln">164  </span></a><span class="s0"># Copyright (c) 2021 PyInstaller Development Team.</span>
+<a name="l165"><span class="ln">165  </span></a><span class="s0">#</span>
+<a name="l166"><span class="ln">166  </span></a><span class="s0"># This file is distributed under the terms of the Apache License 2.0</span>
+<a name="l167"><span class="ln">167  </span></a><span class="s0">#</span>
+<a name="l168"><span class="ln">168  </span></a><span class="s0"># The full license is available in LICENSE.APL.txt, distributed with</span>
+<a name="l169"><span class="ln">169  </span></a><span class="s0"># this software.</span>
+<a name="l170"><span class="ln">170  </span></a><span class="s0">#</span>
+<a name="l171"><span class="ln">171  </span></a><span class="s0"># SPDX-License-Identifier: Apache-2.0</span>
+<a name="l172"><span class="ln">172  </span></a><span class="s0"># ------------------------------------------------------------------</span>
+<a name="l173"><span class="ln">173  </span></a><span class="s0">```</span>
+<a name="l174"><span class="ln">174  </span></a>
+<a name="l175"><span class="ln">175  </span></a><span class="s0">&lt;/details&gt;</span>
+<a name="l176"><span class="ln">176  </span></a>
+<a name="l177"><span class="ln">177  </span></a>
+<a name="l178"><span class="ln">178  </span></a><span class="s0">If you are **updating** a hook, skip this step.</span>
+<a name="l179"><span class="ln">179  </span></a><span class="s0">Do not update the year of the copyright header - even if it's out of date.</span>
+<a name="l180"><span class="ln">180  </span></a>
+<a name="l181"><span class="ln">181  </span></a>
+<a name="l182"><span class="ln">182  </span></a><span class="s0">### Test</span>
+<a name="l183"><span class="ln">183  </span></a>
+<a name="l184"><span class="ln">184  </span></a><span class="s0">Having tests is key to our continuous integration.</span>
+<a name="l185"><span class="ln">185  </span></a><span class="s0">With them we can automatically verify that your hook works on all platforms, all Python versions and new versions of</span>
+<a name="l186"><span class="ln">186  </span></a><span class="s0">libraries as and when they are released.</span>
+<a name="l187"><span class="ln">187  </span></a><span class="s0">Without them, we have no idea if the hook is broken until someone finds out the hard way.</span>
+<a name="l188"><span class="ln">188  </span></a><span class="s0">Please write tests!!!</span>
+<a name="l189"><span class="ln">189  </span></a>
+<a name="l190"><span class="ln">190  </span></a><span class="s0">Some user interface libraries may be impossible to test without user interaction</span>
+<a name="l191"><span class="ln">191  </span></a><span class="s0">or a wrapper library for some web API may require credentials (and possibly a paid subscription) to test.</span>
+<a name="l192"><span class="ln">192  </span></a><span class="s0">In such cases, don't provide a test.</span>
+<a name="l193"><span class="ln">193  </span></a><span class="s0">Instead explain either in the commit message or when you open your pull request why an automatic test is impractical</span>
+<a name="l194"><span class="ln">194  </span></a><span class="s0">then skip on to [the next step](#run-linter).</span>
+<a name="l195"><span class="ln">195  </span></a>
+<a name="l196"><span class="ln">196  </span></a>
+<a name="l197"><span class="ln">197  </span></a><span class="s0">#### Write tests(s)</span>
+<a name="l198"><span class="ln">198  </span></a>
+<a name="l199"><span class="ln">199  </span></a><span class="s0">A test should be the least amount of code required to cause a breakage</span>
+<a name="l200"><span class="ln">200  </span></a><span class="s0">if you do not have the hook which you are contributing.</span>
+<a name="l201"><span class="ln">201  </span></a><span class="s0">For example if you are writing a hook for a library called `foo`</span>
+<a name="l202"><span class="ln">202  </span></a><span class="s0">which crashes immediately under PyInstaller on `import foo` then `import foo` is your test.</span>
+<a name="l203"><span class="ln">203  </span></a><span class="s0">If `import foo` works even without the hook then you will have to get a bit more creative.</span>
+<a name="l204"><span class="ln">204  </span></a><span class="s0">Good sources of such minimal tests are introductory examples</span>
+<a name="l205"><span class="ln">205  </span></a><span class="s0">from the documentation of whichever library you're writing a hook for.</span>
+<a name="l206"><span class="ln">206  </span></a><span class="s0">Package's internal data files and hidden dependencies are prone to moving around so</span>
+<a name="l207"><span class="ln">207  </span></a><span class="s0">tests should not explicitly check for presence of data files or hidden modules directly -</span>
+<a name="l208"><span class="ln">208  </span></a><span class="s0">rather they should use parts of the library which are expected to use said data files or hidden modules.</span>
+<a name="l209"><span class="ln">209  </span></a>
+<a name="l210"><span class="ln">210  </span></a><span class="s0">Tests currently all live in [src/_pyinstaller_hooks_contrib/tests/test_libraries.py](../master/src/_pyinstaller_hooks_contrib/tests/test_libraries.py).</span>
+<a name="l211"><span class="ln">211  </span></a><span class="s0">Navigate there and add something like the following, replacing all occurrences of `foo` with the real name of the library.</span>
+<a name="l212"><span class="ln">212  </span></a><span class="s0">(Note where you put it in that file doesn't matter.)</span>
+<a name="l213"><span class="ln">213  </span></a>
+<a name="l214"><span class="ln">214  </span></a><span class="s0">```python</span>
+<a name="l215"><span class="ln">215  </span></a><span class="s0">@importorskip('foo')</span>
+<a name="l216"><span class="ln">216  </span></a><span class="s0">def test_foo(pyi_builder):</span>
+<a name="l217"><span class="ln">217  </span></a>    <span class="s0">pyi_builder.test_source(&quot;&quot;&quot;</span>
+<a name="l218"><span class="ln">218  </span></a>
+<a name="l219"><span class="ln">219  </span></a>        <span class="s0"># Your test here!</span>
+<a name="l220"><span class="ln">220  </span></a>        <span class="s0">import foo</span>
+<a name="l221"><span class="ln">221  </span></a>
+<a name="l222"><span class="ln">222  </span></a>        <span class="s0">foo.something_fooey()</span>
+<a name="l223"><span class="ln">223  </span></a>
+<a name="l224"><span class="ln">224  </span></a>    <span class="s0">&quot;&quot;&quot;)</span>
+<a name="l225"><span class="ln">225  </span></a><span class="s0">```</span>
+<a name="l226"><span class="ln">226  </span></a>
+<a name="l227"><span class="ln">227  </span></a><span class="s0">If the library has changed significantly over past versions then you may need to add version constraints to the test.</span>
+<a name="l228"><span class="ln">228  </span></a><span class="s0">To do that, replace the `@importorskip(&quot;foo&quot;)` with a call to `PyInstaller.utils.tests.requires()` (e.g.</span>
+<a name="l229"><span class="ln">229  </span></a><span class="s0">`@requires(&quot;foo &gt;= 1.4&quot;)`) to only run the test if the given version constraint is satisfied.</span>
+<a name="l230"><span class="ln">230  </span></a><span class="s0">Note that `@importorskip` uses module names (something you'd `import`) whereas `@requires` uses distribution names</span>
+<a name="l231"><span class="ln">231  </span></a><span class="s0">(something you'd `pip install`) so you'd use `@importorskip(&quot;PIL&quot;)` but `@requires(&quot;pillow&quot;)`.</span>
+<a name="l232"><span class="ln">232  </span></a><span class="s0">For most packages, the distribution and packages names are the same.</span>
+<a name="l233"><span class="ln">233  </span></a>
+<a name="l234"><span class="ln">234  </span></a>
+<a name="l235"><span class="ln">235  </span></a><span class="s0">#### Run the test locally</span>
+<a name="l236"><span class="ln">236  </span></a>
+<a name="l237"><span class="ln">237  </span></a><span class="s0">Running our full test suite is not recommended as it will spend a very long time testing code which you have not touched.</span>
+<a name="l238"><span class="ln">238  </span></a><span class="s0">Instead, run tests individually using either the `-k` option to search for test names:</span>
+<a name="l239"><span class="ln">239  </span></a>
+<a name="l240"><span class="ln">240  </span></a><span class="s0">```</span>
+<a name="l241"><span class="ln">241  </span></a><span class="s0">pytest -k test_foo</span>
+<a name="l242"><span class="ln">242  </span></a><span class="s0">```</span>
+<a name="l243"><span class="ln">243  </span></a>
+<a name="l244"><span class="ln">244  </span></a><span class="s0">Or using full paths:</span>
+<a name="l245"><span class="ln">245  </span></a><span class="s0">```</span>
+<a name="l246"><span class="ln">246  </span></a><span class="s0">pytest src/_pyinstaller_hooks_contrib/tests/test_libraries.py::test_foo</span>
+<a name="l247"><span class="ln">247  </span></a><span class="s0">```</span>
+<a name="l248"><span class="ln">248  </span></a>
+<a name="l249"><span class="ln">249  </span></a>
+<a name="l250"><span class="ln">250  </span></a><span class="s0">#### Pin the test requirement</span>
+<a name="l251"><span class="ln">251  </span></a>
+<a name="l252"><span class="ln">252  </span></a><span class="s0">Get the version of the package you are working with (`pip show foo`)</span>
+<a name="l253"><span class="ln">253  </span></a><span class="s0">and add it to the [requirements-test-libraries.txt](../master/requirements-test-libraries.txt) file.</span>
+<a name="l254"><span class="ln">254  </span></a><span class="s0">The requirements already in there should guide you on the syntax.</span>
+<a name="l255"><span class="ln">255  </span></a>
+<a name="l256"><span class="ln">256  </span></a>
+<a name="l257"><span class="ln">257  </span></a><span class="s0">#### Run the test on CI/CD</span>
+<a name="l258"><span class="ln">258  </span></a>
+<a name="l259"><span class="ln">259  </span></a><span class="s0">&lt;details&gt;&lt;summary&gt;CI/CD now triggers itself when you open a pull request.</span>
+<a name="l260"><span class="ln">260  </span></a><span class="s0">These instructions for triggering jobs manually are obsolete except in rare cases.&lt;/summary&gt;</span>
+<a name="l261"><span class="ln">261  </span></a>
+<a name="l262"><span class="ln">262  </span></a><span class="s0">To test hooks on all platforms we use Github's continuous integration (CI/CD).</span>
+<a name="l263"><span class="ln">263  </span></a><span class="s0">Our CI/CD is a bit unusual in that it's triggered manually and takes arguments</span>
+<a name="l264"><span class="ln">264  </span></a><span class="s0">which limit which tests are run.</span>
+<a name="l265"><span class="ln">265  </span></a><span class="s0">This is for the same reason we filter tests when running locally -</span>
+<a name="l266"><span class="ln">266  </span></a><span class="s0">the full test suite takes ages.</span>
+<a name="l267"><span class="ln">267  </span></a>
+<a name="l268"><span class="ln">268  </span></a><span class="s0">First push the changes you've made so far.</span>
+<a name="l269"><span class="ln">269  </span></a>
+<a name="l270"><span class="ln">270  </span></a><span class="s0">```commandline</span>
+<a name="l271"><span class="ln">271  </span></a><span class="s0">git push --set-upstream origin hook-for-foo</span>
+<a name="l272"><span class="ln">272  </span></a><span class="s0">```</span>
+<a name="l273"><span class="ln">273  </span></a>
+<a name="l274"><span class="ln">274  </span></a><span class="s0">Replace *billy-the-buffalo* with your Github username in the following url then open it.</span>
+<a name="l275"><span class="ln">275  </span></a><span class="s0">It should take you to the `oneshot-test` actions workflow on your fork.</span>
+<a name="l276"><span class="ln">276  </span></a><span class="s0">You may be asked if you want to enable actions on your fork - say yes.</span>
+<a name="l277"><span class="ln">277  </span></a><span class="s0">```</span>
+<a name="l278"><span class="ln">278  </span></a><span class="s0">https://github.com/billy-the-buffalo/pyinstaller-hooks-contrib/actions/workflows/oneshot-test.yml</span>
+<a name="l279"><span class="ln">279  </span></a><span class="s0">```</span>
+<a name="l280"><span class="ln">280  </span></a>
+<a name="l281"><span class="ln">281  </span></a><span class="s0">Find the **Run workflow** button and click on it.</span>
+<a name="l282"><span class="ln">282  </span></a><span class="s0">If you can't see the button,</span>
+<a name="l283"><span class="ln">283  </span></a><span class="s0">select the **Oneshot test** tab from the list of workflows on the left of the page</span>
+<a name="l284"><span class="ln">284  </span></a><span class="s0">and it should appear.</span>
+<a name="l285"><span class="ln">285  </span></a><span class="s0">A dialog should appear containing one drop-down menu and 5 line-edit fields.</span>
+<a name="l286"><span class="ln">286  </span></a><span class="s0">This dialog is where you specify what to test and which platforms and Python versions to test on.</span>
+<a name="l287"><span class="ln">287  </span></a><span class="s0">Its fields are as follows:</span>
+<a name="l288"><span class="ln">288  </span></a>
+<a name="l289"><span class="ln">289  </span></a><span class="s0">1.  A branch to run from. Set this to the branch which you are using (e.g. ``hook-for-foo``),</span>
+<a name="l290"><span class="ln">290  </span></a><span class="s0">2.  Which package(s) to install and their version(s).</span>
+<a name="l291"><span class="ln">291  </span></a>    <span class="s0">Which packages to test are inferred from which packages are installed.</span>
+<a name="l292"><span class="ln">292  </span></a>    <span class="s0">You can generally just copy your own changes to the `requirements-test-libraries.txt` file into this box.</span>
+<a name="l293"><span class="ln">293  </span></a>    <span class="s0">* Set to `foo` to test the latest version of `foo`,</span>
+<a name="l294"><span class="ln">294  </span></a>    <span class="s0">* Set to `foo==1.2, foo==2.3` (note the comma) to test two different versions of `foo` in separate jobs,</span>
+<a name="l295"><span class="ln">295  </span></a>    <span class="s0">* Set to `foo bar` (note the lack of a comma) to test `foo` and `bar` in the same job,</span>
+<a name="l296"><span class="ln">296  </span></a><span class="s0">3.  Which OS or OSs to run on</span>
+<a name="l297"><span class="ln">297  </span></a>    <span class="s0">* Set to `ubuntu` to test only `ubuntu`,</span>
+<a name="l298"><span class="ln">298  </span></a>    <span class="s0">* Set to `ubuntu, macos, windows` (order is unimportant) to test all three OSs.</span>
+<a name="l299"><span class="ln">299  </span></a><span class="s0">4.  Which Python version(s) to run on</span>
+<a name="l300"><span class="ln">300  </span></a>    <span class="s0">* Set to `3.9` to test only Python 3.9,</span>
+<a name="l301"><span class="ln">301  </span></a>    <span class="s0">* Set to `3.8, 3.9, 3.10, 3.11` to test all currently supported version of Python.</span>
+<a name="l302"><span class="ln">302  </span></a><span class="s0">5.  The final two options can generally be left alone.</span>
+<a name="l303"><span class="ln">303  </span></a>
+<a name="l304"><span class="ln">304  </span></a><span class="s0">Hit the green **Run workflow** button at the bottom of the dialog, wait a few seconds then refresh the page.</span>
+<a name="l305"><span class="ln">305  </span></a><span class="s0">Your workflow run should appear.</span>
+<a name="l306"><span class="ln">306  </span></a>
+<a name="l307"><span class="ln">307  </span></a><span class="s0">We'll eventually want to see a build (or collection of builds) which pass on</span>
+<a name="l308"><span class="ln">308  </span></a><span class="s0">all OSs and all Python versions.</span>
+<a name="l309"><span class="ln">309  </span></a><span class="s0">Once you have one, hang onto its URL - you'll need it when you submit the pull request.</span>
+<a name="l310"><span class="ln">310  </span></a><span class="s0">If you can't get it to work - that's fine.</span>
+<a name="l311"><span class="ln">311  </span></a><span class="s0">Open a pull request as a draft, show us what you've got and we'll try and help.</span>
+<a name="l312"><span class="ln">312  </span></a>
+<a name="l313"><span class="ln">313  </span></a>
+<a name="l314"><span class="ln">314  </span></a><span class="s0">#### Triggering CI/CD from a terminal</span>
+<a name="l315"><span class="ln">315  </span></a>
+<a name="l316"><span class="ln">316  </span></a><span class="s0">If you find repeatedly entering the configuration into Github's **Run workflow** dialog arduous</span>
+<a name="l317"><span class="ln">317  </span></a><span class="s0">then we also have a CLI script to launch it.</span>
+<a name="l318"><span class="ln">318  </span></a><span class="s0">Run ``python scripts/cloud-test.py --help`` which should walk you through it.</span>
+<a name="l319"><span class="ln">319  </span></a><span class="s0">You will have to enter all the details again but, thanks to the wonders of terminal history,</span>
+<a name="l320"><span class="ln">320  </span></a><span class="s0">rerunning a configuration is just a case of pressing up then enter.</span>
+<a name="l321"><span class="ln">321  </span></a>
+<a name="l322"><span class="ln">322  </span></a><span class="s0">&lt;/details&gt;</span>
+<a name="l323"><span class="ln">323  </span></a>
+<a name="l324"><span class="ln">324  </span></a>
+<a name="l325"><span class="ln">325  </span></a><span class="s0">### Run Linter</span>
+<a name="l326"><span class="ln">326  </span></a>
+<a name="l327"><span class="ln">327  </span></a><span class="s0">We use `flake8` to enforce code-style.</span>
+<a name="l328"><span class="ln">328  </span></a><span class="s0">`pip install flake8` if you haven't already then run it with the following.</span>
+<a name="l329"><span class="ln">329  </span></a>
+<a name="l330"><span class="ln">330  </span></a><span class="s0">```</span>
+<a name="l331"><span class="ln">331  </span></a><span class="s0">flake8</span>
+<a name="l332"><span class="ln">332  </span></a><span class="s0">```</span>
+<a name="l333"><span class="ln">333  </span></a>
+<a name="l334"><span class="ln">334  </span></a><span class="s0">No news is good news.</span>
+<a name="l335"><span class="ln">335  </span></a><span class="s0">If it complains about your changes then do what it asks then run it again.</span>
+<a name="l336"><span class="ln">336  </span></a><span class="s0">If you don't understand the errors it come up with them lookup the error code</span>
+<a name="l337"><span class="ln">337  </span></a><span class="s0">in each line (a capital letter followed by a number e.g. `W391`).</span>
+<a name="l338"><span class="ln">338  </span></a>
+<a name="l339"><span class="ln">339  </span></a><span class="s0">**Please do not fix flake8 issues found in parts of the repository other than the bit that you are working on.** Not only is it very boring for you, but it is harder for maintainers to</span>
+<a name="l340"><span class="ln">340  </span></a><span class="s0">review your changes because so many of them are irrelevant to the hook you are adding or changing.</span>
+<a name="l341"><span class="ln">341  </span></a>
+<a name="l342"><span class="ln">342  </span></a>
+<a name="l343"><span class="ln">343  </span></a><span class="s0">### Add a news entry</span>
+<a name="l344"><span class="ln">344  </span></a>
+<a name="l345"><span class="ln">345  </span></a><span class="s0">Please read [news/README.txt](https://github.com/pyinstaller/pyinstaller-hooks-contrib/blob/master/news/README.txt) before submitting you pull request.</span>
+<a name="l346"><span class="ln">346  </span></a><span class="s0">This will require you to know the pull request number before you make the pull request.</span>
+<a name="l347"><span class="ln">347  </span></a><span class="s0">You can usually guess it by adding 1 to the number of [the latest issue or pull request](https://github.com/pyinstaller/pyinstaller-hooks-contrib/issues?q=sort%3Acreated-desc).</span>
+<a name="l348"><span class="ln">348  </span></a><span class="s0">Alternatively, [submit the pull request](#submit-the-pull-request) as a draft,</span>
+<a name="l349"><span class="ln">349  </span></a><span class="s0">then add, commit and push the news item after you know your pull request number.</span>
+<a name="l350"><span class="ln">350  </span></a>
+<a name="l351"><span class="ln">351  </span></a>
+<a name="l352"><span class="ln">352  </span></a><span class="s0">### Summary</span>
+<a name="l353"><span class="ln">353  </span></a>
+<a name="l354"><span class="ln">354  </span></a><span class="s0">A brief checklist for before submitting your pull request:</span>
+<a name="l355"><span class="ln">355  </span></a>
+<a name="l356"><span class="ln">356  </span></a><span class="s0">* [ ] All new Python files have [the appropriate copyright header](#add-the-copyright-header).</span>
+<a name="l357"><span class="ln">357  </span></a><span class="s0">* [ ] You have written a [news entry](#add-a-news-entry).</span>
+<a name="l358"><span class="ln">358  </span></a><span class="s0">* [ ] Your changes [satisfy the linter](#run-linter) (run `flake8`).</span>
+<a name="l359"><span class="ln">359  </span></a><span class="s0">* [ ] You have written tests (if possible) and [pinned the test requirement](#pin-the-test-requirement).</span>
+<a name="l360"><span class="ln">360  </span></a>
+<a name="l361"><span class="ln">361  </span></a>
+<a name="l362"><span class="ln">362  </span></a><span class="s0">### Submit the pull request</span>
+<a name="l363"><span class="ln">363  </span></a>
+<a name="l364"><span class="ln">364  </span></a><span class="s0">Once you've done all the above, run `git push --set-upstream origin hook-for-foo` then go ahead and create a pull request.</span>
+<a name="l365"><span class="ln">365  </span></a><span class="s0">If you're stuck doing any of the above steps, create a draft pull request and explain what's wrong - we'll sort you out...</span>
+<a name="l366"><span class="ln">366  </span></a><span class="s0">Feel free to copy/paste commit messages into the Github pull request title and description.</span>
+<a name="l367"><span class="ln">367  </span></a><span class="s0">If you've never done a pull request before, note that you can edit it simply by running `git push` again.</span>
+<a name="l368"><span class="ln">368  </span></a><span class="s0">No need to close the old one and start a new one.</span>
+<a name="l369"><span class="ln">369  </span></a>
+<a name="l370"><span class="ln">370  </span></a><span class="s0">---</span>
+<a name="l371"><span class="ln">371  </span></a>
+<a name="l372"><span class="ln">372  </span></a><span class="s0">If you plan to contribute frequently or are interested in becoming a developer,</span>
+<a name="l373"><span class="ln">373  </span></a><span class="s0">send an email to `legorooj@protonmail.com` to let us know.</span>
+<a name="l374"><span class="ln">374  </span></a></pre>
+</body>
+</html>

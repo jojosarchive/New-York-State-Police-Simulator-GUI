@@ -1,0 +1,266 @@
+<html>
+<head>
+<title>extension.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #5f826b; font-style: italic;}
+.s1 { color: #bcbec4;}
+.s2 { color: #cf8e6d;}
+.s3 { color: #7a7e85;}
+.s4 { color: #bcbec4;}
+.s5 { color: #6aab73;}
+.s6 { color: #2aacb8;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+extension.py</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0">&quot;&quot;&quot;distutils.extension 
+<a name="l2"><span class="ln">2    </span></a> 
+<a name="l3"><span class="ln">3    </span></a>Provides the Extension class, used to describe C/C++ extension 
+<a name="l4"><span class="ln">4    </span></a>modules in setup scripts.&quot;&quot;&quot;</span>
+<a name="l5"><span class="ln">5    </span></a>
+<a name="l6"><span class="ln">6    </span></a><span class="s2">import </span><span class="s1">os</span>
+<a name="l7"><span class="ln">7    </span></a><span class="s2">import </span><span class="s1">warnings</span>
+<a name="l8"><span class="ln">8    </span></a>
+<a name="l9"><span class="ln">9    </span></a><span class="s3"># This class is really only used by the &quot;build_ext&quot; command, so it might</span>
+<a name="l10"><span class="ln">10   </span></a><span class="s3"># make sense to put it in distutils.command.build_ext.  However, that</span>
+<a name="l11"><span class="ln">11   </span></a><span class="s3"># module is already big enough, and I want to make this class a bit more</span>
+<a name="l12"><span class="ln">12   </span></a><span class="s3"># complex to simplify some common cases (&quot;foo&quot; module in &quot;foo.c&quot;) and do</span>
+<a name="l13"><span class="ln">13   </span></a><span class="s3"># better error-checking (&quot;foo.c&quot; actually exists).</span>
+<a name="l14"><span class="ln">14   </span></a><span class="s3">#</span>
+<a name="l15"><span class="ln">15   </span></a><span class="s3"># Also, putting this in build_ext.py means every setup script would have to</span>
+<a name="l16"><span class="ln">16   </span></a><span class="s3"># import that large-ish module (indirectly, through distutils.core) in</span>
+<a name="l17"><span class="ln">17   </span></a><span class="s3"># order to do anything.</span>
+<a name="l18"><span class="ln">18   </span></a>
+<a name="l19"><span class="ln">19   </span></a>
+<a name="l20"><span class="ln">20   </span></a><span class="s2">class </span><span class="s1">Extension</span><span class="s4">:</span>
+<a name="l21"><span class="ln">21   </span></a>    <span class="s0">&quot;&quot;&quot;Just a collection of attributes that describes an extension 
+<a name="l22"><span class="ln">22   </span></a>    module and everything needed to build it (hopefully in a portable 
+<a name="l23"><span class="ln">23   </span></a>    way, but there are hooks that let you be as unportable as you need). 
+<a name="l24"><span class="ln">24   </span></a> 
+<a name="l25"><span class="ln">25   </span></a>    Instance attributes: 
+<a name="l26"><span class="ln">26   </span></a>      name : string 
+<a name="l27"><span class="ln">27   </span></a>        the full name of the extension, including any packages -- ie. 
+<a name="l28"><span class="ln">28   </span></a>        *not* a filename or pathname, but Python dotted name 
+<a name="l29"><span class="ln">29   </span></a>      sources : [string] 
+<a name="l30"><span class="ln">30   </span></a>        list of source filenames, relative to the distribution root 
+<a name="l31"><span class="ln">31   </span></a>        (where the setup script lives), in Unix form (slash-separated) 
+<a name="l32"><span class="ln">32   </span></a>        for portability.  Source files may be C, C++, SWIG (.i), 
+<a name="l33"><span class="ln">33   </span></a>        platform-specific resource files, or whatever else is recognized 
+<a name="l34"><span class="ln">34   </span></a>        by the &quot;build_ext&quot; command as source for a Python extension. 
+<a name="l35"><span class="ln">35   </span></a>      include_dirs : [string] 
+<a name="l36"><span class="ln">36   </span></a>        list of directories to search for C/C++ header files (in Unix 
+<a name="l37"><span class="ln">37   </span></a>        form for portability) 
+<a name="l38"><span class="ln">38   </span></a>      define_macros : [(name : string, value : string|None)] 
+<a name="l39"><span class="ln">39   </span></a>        list of macros to define; each macro is defined using a 2-tuple, 
+<a name="l40"><span class="ln">40   </span></a>        where 'value' is either the string to define it to or None to 
+<a name="l41"><span class="ln">41   </span></a>        define it without a particular value (equivalent of &quot;#define 
+<a name="l42"><span class="ln">42   </span></a>        FOO&quot; in source or -DFOO on Unix C compiler command line) 
+<a name="l43"><span class="ln">43   </span></a>      undef_macros : [string] 
+<a name="l44"><span class="ln">44   </span></a>        list of macros to undefine explicitly 
+<a name="l45"><span class="ln">45   </span></a>      library_dirs : [string] 
+<a name="l46"><span class="ln">46   </span></a>        list of directories to search for C/C++ libraries at link time 
+<a name="l47"><span class="ln">47   </span></a>      libraries : [string] 
+<a name="l48"><span class="ln">48   </span></a>        list of library names (not filenames or paths) to link against 
+<a name="l49"><span class="ln">49   </span></a>      runtime_library_dirs : [string] 
+<a name="l50"><span class="ln">50   </span></a>        list of directories to search for C/C++ libraries at run time 
+<a name="l51"><span class="ln">51   </span></a>        (for shared extensions, this is when the extension is loaded) 
+<a name="l52"><span class="ln">52   </span></a>      extra_objects : [string] 
+<a name="l53"><span class="ln">53   </span></a>        list of extra files to link with (eg. object files not implied 
+<a name="l54"><span class="ln">54   </span></a>        by 'sources', static library that must be explicitly specified, 
+<a name="l55"><span class="ln">55   </span></a>        binary resource files, etc.) 
+<a name="l56"><span class="ln">56   </span></a>      extra_compile_args : [string] 
+<a name="l57"><span class="ln">57   </span></a>        any extra platform- and compiler-specific information to use 
+<a name="l58"><span class="ln">58   </span></a>        when compiling the source files in 'sources'.  For platforms and 
+<a name="l59"><span class="ln">59   </span></a>        compilers where &quot;command line&quot; makes sense, this is typically a 
+<a name="l60"><span class="ln">60   </span></a>        list of command-line arguments, but for other platforms it could 
+<a name="l61"><span class="ln">61   </span></a>        be anything. 
+<a name="l62"><span class="ln">62   </span></a>      extra_link_args : [string] 
+<a name="l63"><span class="ln">63   </span></a>        any extra platform- and compiler-specific information to use 
+<a name="l64"><span class="ln">64   </span></a>        when linking object files together to create the extension (or 
+<a name="l65"><span class="ln">65   </span></a>        to create a new static Python interpreter).  Similar 
+<a name="l66"><span class="ln">66   </span></a>        interpretation as for 'extra_compile_args'. 
+<a name="l67"><span class="ln">67   </span></a>      export_symbols : [string] 
+<a name="l68"><span class="ln">68   </span></a>        list of symbols to be exported from a shared extension.  Not 
+<a name="l69"><span class="ln">69   </span></a>        used on all platforms, and not generally necessary for Python 
+<a name="l70"><span class="ln">70   </span></a>        extensions, which typically export exactly one symbol: &quot;init&quot; + 
+<a name="l71"><span class="ln">71   </span></a>        extension_name. 
+<a name="l72"><span class="ln">72   </span></a>      swig_opts : [string] 
+<a name="l73"><span class="ln">73   </span></a>        any extra options to pass to SWIG if a source file has the .i 
+<a name="l74"><span class="ln">74   </span></a>        extension. 
+<a name="l75"><span class="ln">75   </span></a>      depends : [string] 
+<a name="l76"><span class="ln">76   </span></a>        list of files that the extension depends on 
+<a name="l77"><span class="ln">77   </span></a>      language : string 
+<a name="l78"><span class="ln">78   </span></a>        extension language (i.e. &quot;c&quot;, &quot;c++&quot;, &quot;objc&quot;). Will be detected 
+<a name="l79"><span class="ln">79   </span></a>        from the source extensions if not provided. 
+<a name="l80"><span class="ln">80   </span></a>      optional : boolean 
+<a name="l81"><span class="ln">81   </span></a>        specifies that a build failure in the extension should not abort the 
+<a name="l82"><span class="ln">82   </span></a>        build process, but simply not install the failing extension. 
+<a name="l83"><span class="ln">83   </span></a>    &quot;&quot;&quot;</span>
+<a name="l84"><span class="ln">84   </span></a>
+<a name="l85"><span class="ln">85   </span></a>    <span class="s3"># When adding arguments to this constructor, be sure to update</span>
+<a name="l86"><span class="ln">86   </span></a>    <span class="s3"># setup_keywords in core.py.</span>
+<a name="l87"><span class="ln">87   </span></a>    <span class="s2">def </span><span class="s1">__init__</span><span class="s4">(</span>
+<a name="l88"><span class="ln">88   </span></a>        <span class="s1">self</span><span class="s4">,</span>
+<a name="l89"><span class="ln">89   </span></a>        <span class="s1">name</span><span class="s4">,</span>
+<a name="l90"><span class="ln">90   </span></a>        <span class="s1">sources</span><span class="s4">,</span>
+<a name="l91"><span class="ln">91   </span></a>        <span class="s1">include_dirs</span><span class="s4">=</span><span class="s2">None</span><span class="s4">,</span>
+<a name="l92"><span class="ln">92   </span></a>        <span class="s1">define_macros</span><span class="s4">=</span><span class="s2">None</span><span class="s4">,</span>
+<a name="l93"><span class="ln">93   </span></a>        <span class="s1">undef_macros</span><span class="s4">=</span><span class="s2">None</span><span class="s4">,</span>
+<a name="l94"><span class="ln">94   </span></a>        <span class="s1">library_dirs</span><span class="s4">=</span><span class="s2">None</span><span class="s4">,</span>
+<a name="l95"><span class="ln">95   </span></a>        <span class="s1">libraries</span><span class="s4">=</span><span class="s2">None</span><span class="s4">,</span>
+<a name="l96"><span class="ln">96   </span></a>        <span class="s1">runtime_library_dirs</span><span class="s4">=</span><span class="s2">None</span><span class="s4">,</span>
+<a name="l97"><span class="ln">97   </span></a>        <span class="s1">extra_objects</span><span class="s4">=</span><span class="s2">None</span><span class="s4">,</span>
+<a name="l98"><span class="ln">98   </span></a>        <span class="s1">extra_compile_args</span><span class="s4">=</span><span class="s2">None</span><span class="s4">,</span>
+<a name="l99"><span class="ln">99   </span></a>        <span class="s1">extra_link_args</span><span class="s4">=</span><span class="s2">None</span><span class="s4">,</span>
+<a name="l100"><span class="ln">100  </span></a>        <span class="s1">export_symbols</span><span class="s4">=</span><span class="s2">None</span><span class="s4">,</span>
+<a name="l101"><span class="ln">101  </span></a>        <span class="s1">swig_opts</span><span class="s4">=</span><span class="s2">None</span><span class="s4">,</span>
+<a name="l102"><span class="ln">102  </span></a>        <span class="s1">depends</span><span class="s4">=</span><span class="s2">None</span><span class="s4">,</span>
+<a name="l103"><span class="ln">103  </span></a>        <span class="s1">language</span><span class="s4">=</span><span class="s2">None</span><span class="s4">,</span>
+<a name="l104"><span class="ln">104  </span></a>        <span class="s1">optional</span><span class="s4">=</span><span class="s2">None</span><span class="s4">,</span>
+<a name="l105"><span class="ln">105  </span></a>        <span class="s4">**</span><span class="s1">kw</span><span class="s4">,  </span><span class="s3"># To catch unknown keywords</span>
+<a name="l106"><span class="ln">106  </span></a>    <span class="s4">):</span>
+<a name="l107"><span class="ln">107  </span></a>        <span class="s2">if not </span><span class="s1">isinstance</span><span class="s4">(</span><span class="s1">name</span><span class="s4">, </span><span class="s1">str</span><span class="s4">):</span>
+<a name="l108"><span class="ln">108  </span></a>            <span class="s2">raise </span><span class="s1">AssertionError</span><span class="s4">(</span><span class="s5">&quot;'name' must be a string&quot;</span><span class="s4">)</span>
+<a name="l109"><span class="ln">109  </span></a>        <span class="s2">if not </span><span class="s4">(</span><span class="s1">isinstance</span><span class="s4">(</span><span class="s1">sources</span><span class="s4">, </span><span class="s1">list</span><span class="s4">) </span><span class="s2">and </span><span class="s1">all</span><span class="s4">(</span><span class="s1">isinstance</span><span class="s4">(</span><span class="s1">v</span><span class="s4">, </span><span class="s1">str</span><span class="s4">) </span><span class="s2">for </span><span class="s1">v </span><span class="s2">in </span><span class="s1">sources</span><span class="s4">)):</span>
+<a name="l110"><span class="ln">110  </span></a>            <span class="s2">raise </span><span class="s1">AssertionError</span><span class="s4">(</span><span class="s5">&quot;'sources' must be a list of strings&quot;</span><span class="s4">)</span>
+<a name="l111"><span class="ln">111  </span></a>
+<a name="l112"><span class="ln">112  </span></a>        <span class="s1">self</span><span class="s4">.</span><span class="s1">name </span><span class="s4">= </span><span class="s1">name</span>
+<a name="l113"><span class="ln">113  </span></a>        <span class="s1">self</span><span class="s4">.</span><span class="s1">sources </span><span class="s4">= </span><span class="s1">sources</span>
+<a name="l114"><span class="ln">114  </span></a>        <span class="s1">self</span><span class="s4">.</span><span class="s1">include_dirs </span><span class="s4">= </span><span class="s1">include_dirs </span><span class="s2">or </span><span class="s4">[]</span>
+<a name="l115"><span class="ln">115  </span></a>        <span class="s1">self</span><span class="s4">.</span><span class="s1">define_macros </span><span class="s4">= </span><span class="s1">define_macros </span><span class="s2">or </span><span class="s4">[]</span>
+<a name="l116"><span class="ln">116  </span></a>        <span class="s1">self</span><span class="s4">.</span><span class="s1">undef_macros </span><span class="s4">= </span><span class="s1">undef_macros </span><span class="s2">or </span><span class="s4">[]</span>
+<a name="l117"><span class="ln">117  </span></a>        <span class="s1">self</span><span class="s4">.</span><span class="s1">library_dirs </span><span class="s4">= </span><span class="s1">library_dirs </span><span class="s2">or </span><span class="s4">[]</span>
+<a name="l118"><span class="ln">118  </span></a>        <span class="s1">self</span><span class="s4">.</span><span class="s1">libraries </span><span class="s4">= </span><span class="s1">libraries </span><span class="s2">or </span><span class="s4">[]</span>
+<a name="l119"><span class="ln">119  </span></a>        <span class="s1">self</span><span class="s4">.</span><span class="s1">runtime_library_dirs </span><span class="s4">= </span><span class="s1">runtime_library_dirs </span><span class="s2">or </span><span class="s4">[]</span>
+<a name="l120"><span class="ln">120  </span></a>        <span class="s1">self</span><span class="s4">.</span><span class="s1">extra_objects </span><span class="s4">= </span><span class="s1">extra_objects </span><span class="s2">or </span><span class="s4">[]</span>
+<a name="l121"><span class="ln">121  </span></a>        <span class="s1">self</span><span class="s4">.</span><span class="s1">extra_compile_args </span><span class="s4">= </span><span class="s1">extra_compile_args </span><span class="s2">or </span><span class="s4">[]</span>
+<a name="l122"><span class="ln">122  </span></a>        <span class="s1">self</span><span class="s4">.</span><span class="s1">extra_link_args </span><span class="s4">= </span><span class="s1">extra_link_args </span><span class="s2">or </span><span class="s4">[]</span>
+<a name="l123"><span class="ln">123  </span></a>        <span class="s1">self</span><span class="s4">.</span><span class="s1">export_symbols </span><span class="s4">= </span><span class="s1">export_symbols </span><span class="s2">or </span><span class="s4">[]</span>
+<a name="l124"><span class="ln">124  </span></a>        <span class="s1">self</span><span class="s4">.</span><span class="s1">swig_opts </span><span class="s4">= </span><span class="s1">swig_opts </span><span class="s2">or </span><span class="s4">[]</span>
+<a name="l125"><span class="ln">125  </span></a>        <span class="s1">self</span><span class="s4">.</span><span class="s1">depends </span><span class="s4">= </span><span class="s1">depends </span><span class="s2">or </span><span class="s4">[]</span>
+<a name="l126"><span class="ln">126  </span></a>        <span class="s1">self</span><span class="s4">.</span><span class="s1">language </span><span class="s4">= </span><span class="s1">language</span>
+<a name="l127"><span class="ln">127  </span></a>        <span class="s1">self</span><span class="s4">.</span><span class="s1">optional </span><span class="s4">= </span><span class="s1">optional</span>
+<a name="l128"><span class="ln">128  </span></a>
+<a name="l129"><span class="ln">129  </span></a>        <span class="s3"># If there are unknown keyword options, warn about them</span>
+<a name="l130"><span class="ln">130  </span></a>        <span class="s2">if </span><span class="s1">len</span><span class="s4">(</span><span class="s1">kw</span><span class="s4">) &gt; </span><span class="s6">0</span><span class="s4">:</span>
+<a name="l131"><span class="ln">131  </span></a>            <span class="s1">options </span><span class="s4">= [</span><span class="s1">repr</span><span class="s4">(</span><span class="s1">option</span><span class="s4">) </span><span class="s2">for </span><span class="s1">option </span><span class="s2">in </span><span class="s1">kw</span><span class="s4">]</span>
+<a name="l132"><span class="ln">132  </span></a>            <span class="s1">options </span><span class="s4">= </span><span class="s5">', '</span><span class="s4">.</span><span class="s1">join</span><span class="s4">(</span><span class="s1">sorted</span><span class="s4">(</span><span class="s1">options</span><span class="s4">))</span>
+<a name="l133"><span class="ln">133  </span></a>            <span class="s1">msg </span><span class="s4">= </span><span class="s5">&quot;Unknown Extension options: %s&quot; </span><span class="s4">% </span><span class="s1">options</span>
+<a name="l134"><span class="ln">134  </span></a>            <span class="s1">warnings</span><span class="s4">.</span><span class="s1">warn</span><span class="s4">(</span><span class="s1">msg</span><span class="s4">)</span>
+<a name="l135"><span class="ln">135  </span></a>
+<a name="l136"><span class="ln">136  </span></a>    <span class="s2">def </span><span class="s1">__repr__</span><span class="s4">(</span><span class="s1">self</span><span class="s4">):</span>
+<a name="l137"><span class="ln">137  </span></a>        <span class="s2">return </span><span class="s5">f'&lt;</span><span class="s2">{</span><span class="s1">self</span><span class="s4">.</span><span class="s1">__class__</span><span class="s4">.</span><span class="s1">__module__</span><span class="s2">}</span><span class="s5">.</span><span class="s2">{</span><span class="s1">self</span><span class="s4">.</span><span class="s1">__class__</span><span class="s4">.</span><span class="s1">__qualname__</span><span class="s2">}</span><span class="s5">(</span><span class="s2">{</span><span class="s1">self</span><span class="s4">.</span><span class="s1">name</span><span class="s2">!r}</span><span class="s5">) at </span><span class="s2">{</span><span class="s1">id</span><span class="s4">(</span><span class="s1">self</span><span class="s4">)</span><span class="s2">:</span><span class="s5">#x</span><span class="s2">}</span><span class="s5">&gt;'</span>
+<a name="l138"><span class="ln">138  </span></a>
+<a name="l139"><span class="ln">139  </span></a>
+<a name="l140"><span class="ln">140  </span></a><span class="s2">def </span><span class="s1">read_setup_file</span><span class="s4">(</span><span class="s1">filename</span><span class="s4">):  </span><span class="s3"># noqa: C901</span>
+<a name="l141"><span class="ln">141  </span></a>    <span class="s0">&quot;&quot;&quot;Reads a Setup file and returns Extension instances.&quot;&quot;&quot;</span>
+<a name="l142"><span class="ln">142  </span></a>    <span class="s2">from </span><span class="s1">distutils</span><span class="s4">.</span><span class="s1">sysconfig </span><span class="s2">import </span><span class="s1">_variable_rx</span><span class="s4">, </span><span class="s1">expand_makefile_vars</span><span class="s4">, </span><span class="s1">parse_makefile</span>
+<a name="l143"><span class="ln">143  </span></a>    <span class="s2">from </span><span class="s1">distutils</span><span class="s4">.</span><span class="s1">text_file </span><span class="s2">import </span><span class="s1">TextFile</span>
+<a name="l144"><span class="ln">144  </span></a>    <span class="s2">from </span><span class="s1">distutils</span><span class="s4">.</span><span class="s1">util </span><span class="s2">import </span><span class="s1">split_quoted</span>
+<a name="l145"><span class="ln">145  </span></a>
+<a name="l146"><span class="ln">146  </span></a>    <span class="s3"># First pass over the file to gather &quot;VAR = VALUE&quot; assignments.</span>
+<a name="l147"><span class="ln">147  </span></a>    <span class="s1">vars </span><span class="s4">= </span><span class="s1">parse_makefile</span><span class="s4">(</span><span class="s1">filename</span><span class="s4">)</span>
+<a name="l148"><span class="ln">148  </span></a>
+<a name="l149"><span class="ln">149  </span></a>    <span class="s3"># Second pass to gobble up the real content: lines of the form</span>
+<a name="l150"><span class="ln">150  </span></a>    <span class="s3">#   &lt;module&gt; ... [&lt;sourcefile&gt; ...] [&lt;cpparg&gt; ...] [&lt;library&gt; ...]</span>
+<a name="l151"><span class="ln">151  </span></a>    <span class="s1">file </span><span class="s4">= </span><span class="s1">TextFile</span><span class="s4">(</span>
+<a name="l152"><span class="ln">152  </span></a>        <span class="s1">filename</span><span class="s4">,</span>
+<a name="l153"><span class="ln">153  </span></a>        <span class="s1">strip_comments</span><span class="s4">=</span><span class="s6">1</span><span class="s4">,</span>
+<a name="l154"><span class="ln">154  </span></a>        <span class="s1">skip_blanks</span><span class="s4">=</span><span class="s6">1</span><span class="s4">,</span>
+<a name="l155"><span class="ln">155  </span></a>        <span class="s1">join_lines</span><span class="s4">=</span><span class="s6">1</span><span class="s4">,</span>
+<a name="l156"><span class="ln">156  </span></a>        <span class="s1">lstrip_ws</span><span class="s4">=</span><span class="s6">1</span><span class="s4">,</span>
+<a name="l157"><span class="ln">157  </span></a>        <span class="s1">rstrip_ws</span><span class="s4">=</span><span class="s6">1</span><span class="s4">,</span>
+<a name="l158"><span class="ln">158  </span></a>    <span class="s4">)</span>
+<a name="l159"><span class="ln">159  </span></a>    <span class="s2">try</span><span class="s4">:</span>
+<a name="l160"><span class="ln">160  </span></a>        <span class="s1">extensions </span><span class="s4">= []</span>
+<a name="l161"><span class="ln">161  </span></a>
+<a name="l162"><span class="ln">162  </span></a>        <span class="s2">while True</span><span class="s4">:</span>
+<a name="l163"><span class="ln">163  </span></a>            <span class="s1">line </span><span class="s4">= </span><span class="s1">file</span><span class="s4">.</span><span class="s1">readline</span><span class="s4">()</span>
+<a name="l164"><span class="ln">164  </span></a>            <span class="s2">if </span><span class="s1">line </span><span class="s2">is None</span><span class="s4">:  </span><span class="s3"># eof</span>
+<a name="l165"><span class="ln">165  </span></a>                <span class="s2">break</span>
+<a name="l166"><span class="ln">166  </span></a>            <span class="s2">if </span><span class="s1">_variable_rx</span><span class="s4">.</span><span class="s1">match</span><span class="s4">(</span><span class="s1">line</span><span class="s4">):  </span><span class="s3"># VAR=VALUE, handled in first pass</span>
+<a name="l167"><span class="ln">167  </span></a>                <span class="s2">continue</span>
+<a name="l168"><span class="ln">168  </span></a>
+<a name="l169"><span class="ln">169  </span></a>            <span class="s2">if </span><span class="s1">line</span><span class="s4">[</span><span class="s6">0</span><span class="s4">] == </span><span class="s1">line</span><span class="s4">[-</span><span class="s6">1</span><span class="s4">] == </span><span class="s5">&quot;*&quot;</span><span class="s4">:</span>
+<a name="l170"><span class="ln">170  </span></a>                <span class="s1">file</span><span class="s4">.</span><span class="s1">warn</span><span class="s4">(</span><span class="s5">&quot;'%s' lines not handled yet&quot; </span><span class="s4">% </span><span class="s1">line</span><span class="s4">)</span>
+<a name="l171"><span class="ln">171  </span></a>                <span class="s2">continue</span>
+<a name="l172"><span class="ln">172  </span></a>
+<a name="l173"><span class="ln">173  </span></a>            <span class="s1">line </span><span class="s4">= </span><span class="s1">expand_makefile_vars</span><span class="s4">(</span><span class="s1">line</span><span class="s4">, </span><span class="s1">vars</span><span class="s4">)</span>
+<a name="l174"><span class="ln">174  </span></a>            <span class="s1">words </span><span class="s4">= </span><span class="s1">split_quoted</span><span class="s4">(</span><span class="s1">line</span><span class="s4">)</span>
+<a name="l175"><span class="ln">175  </span></a>
+<a name="l176"><span class="ln">176  </span></a>            <span class="s3"># NB. this parses a slightly different syntax than the old</span>
+<a name="l177"><span class="ln">177  </span></a>            <span class="s3"># makesetup script: here, there must be exactly one extension per</span>
+<a name="l178"><span class="ln">178  </span></a>            <span class="s3"># line, and it must be the first word of the line.  I have no idea</span>
+<a name="l179"><span class="ln">179  </span></a>            <span class="s3"># why the old syntax supported multiple extensions per line, as</span>
+<a name="l180"><span class="ln">180  </span></a>            <span class="s3"># they all wind up being the same.</span>
+<a name="l181"><span class="ln">181  </span></a>
+<a name="l182"><span class="ln">182  </span></a>            <span class="s1">module </span><span class="s4">= </span><span class="s1">words</span><span class="s4">[</span><span class="s6">0</span><span class="s4">]</span>
+<a name="l183"><span class="ln">183  </span></a>            <span class="s1">ext </span><span class="s4">= </span><span class="s1">Extension</span><span class="s4">(</span><span class="s1">module</span><span class="s4">, [])</span>
+<a name="l184"><span class="ln">184  </span></a>            <span class="s1">append_next_word </span><span class="s4">= </span><span class="s2">None</span>
+<a name="l185"><span class="ln">185  </span></a>
+<a name="l186"><span class="ln">186  </span></a>            <span class="s2">for </span><span class="s1">word </span><span class="s2">in </span><span class="s1">words</span><span class="s4">[</span><span class="s6">1</span><span class="s4">:]:</span>
+<a name="l187"><span class="ln">187  </span></a>                <span class="s2">if </span><span class="s1">append_next_word </span><span class="s2">is not None</span><span class="s4">:</span>
+<a name="l188"><span class="ln">188  </span></a>                    <span class="s1">append_next_word</span><span class="s4">.</span><span class="s1">append</span><span class="s4">(</span><span class="s1">word</span><span class="s4">)</span>
+<a name="l189"><span class="ln">189  </span></a>                    <span class="s1">append_next_word </span><span class="s4">= </span><span class="s2">None</span>
+<a name="l190"><span class="ln">190  </span></a>                    <span class="s2">continue</span>
+<a name="l191"><span class="ln">191  </span></a>
+<a name="l192"><span class="ln">192  </span></a>                <span class="s1">suffix </span><span class="s4">= </span><span class="s1">os</span><span class="s4">.</span><span class="s1">path</span><span class="s4">.</span><span class="s1">splitext</span><span class="s4">(</span><span class="s1">word</span><span class="s4">)[</span><span class="s6">1</span><span class="s4">]</span>
+<a name="l193"><span class="ln">193  </span></a>                <span class="s1">switch </span><span class="s4">= </span><span class="s1">word</span><span class="s4">[</span><span class="s6">0</span><span class="s4">:</span><span class="s6">2</span><span class="s4">]</span>
+<a name="l194"><span class="ln">194  </span></a>                <span class="s1">value </span><span class="s4">= </span><span class="s1">word</span><span class="s4">[</span><span class="s6">2</span><span class="s4">:]</span>
+<a name="l195"><span class="ln">195  </span></a>
+<a name="l196"><span class="ln">196  </span></a>                <span class="s2">if </span><span class="s1">suffix </span><span class="s2">in </span><span class="s4">(</span><span class="s5">&quot;.c&quot;</span><span class="s4">, </span><span class="s5">&quot;.cc&quot;</span><span class="s4">, </span><span class="s5">&quot;.cpp&quot;</span><span class="s4">, </span><span class="s5">&quot;.cxx&quot;</span><span class="s4">, </span><span class="s5">&quot;.c++&quot;</span><span class="s4">, </span><span class="s5">&quot;.m&quot;</span><span class="s4">, </span><span class="s5">&quot;.mm&quot;</span><span class="s4">):</span>
+<a name="l197"><span class="ln">197  </span></a>                    <span class="s3"># hmm, should we do something about C vs. C++ sources?</span>
+<a name="l198"><span class="ln">198  </span></a>                    <span class="s3"># or leave it up to the CCompiler implementation to</span>
+<a name="l199"><span class="ln">199  </span></a>                    <span class="s3"># worry about?</span>
+<a name="l200"><span class="ln">200  </span></a>                    <span class="s1">ext</span><span class="s4">.</span><span class="s1">sources</span><span class="s4">.</span><span class="s1">append</span><span class="s4">(</span><span class="s1">word</span><span class="s4">)</span>
+<a name="l201"><span class="ln">201  </span></a>                <span class="s2">elif </span><span class="s1">switch </span><span class="s4">== </span><span class="s5">&quot;-I&quot;</span><span class="s4">:</span>
+<a name="l202"><span class="ln">202  </span></a>                    <span class="s1">ext</span><span class="s4">.</span><span class="s1">include_dirs</span><span class="s4">.</span><span class="s1">append</span><span class="s4">(</span><span class="s1">value</span><span class="s4">)</span>
+<a name="l203"><span class="ln">203  </span></a>                <span class="s2">elif </span><span class="s1">switch </span><span class="s4">== </span><span class="s5">&quot;-D&quot;</span><span class="s4">:</span>
+<a name="l204"><span class="ln">204  </span></a>                    <span class="s1">equals </span><span class="s4">= </span><span class="s1">value</span><span class="s4">.</span><span class="s1">find</span><span class="s4">(</span><span class="s5">&quot;=&quot;</span><span class="s4">)</span>
+<a name="l205"><span class="ln">205  </span></a>                    <span class="s2">if </span><span class="s1">equals </span><span class="s4">== -</span><span class="s6">1</span><span class="s4">:  </span><span class="s3"># bare &quot;-DFOO&quot; -- no value</span>
+<a name="l206"><span class="ln">206  </span></a>                        <span class="s1">ext</span><span class="s4">.</span><span class="s1">define_macros</span><span class="s4">.</span><span class="s1">append</span><span class="s4">((</span><span class="s1">value</span><span class="s4">, </span><span class="s2">None</span><span class="s4">))</span>
+<a name="l207"><span class="ln">207  </span></a>                    <span class="s2">else</span><span class="s4">:  </span><span class="s3"># &quot;-DFOO=blah&quot;</span>
+<a name="l208"><span class="ln">208  </span></a>                        <span class="s1">ext</span><span class="s4">.</span><span class="s1">define_macros</span><span class="s4">.</span><span class="s1">append</span><span class="s4">((</span><span class="s1">value</span><span class="s4">[</span><span class="s6">0</span><span class="s4">:</span><span class="s1">equals</span><span class="s4">], </span><span class="s1">value</span><span class="s4">[</span><span class="s1">equals </span><span class="s4">+ </span><span class="s6">2 </span><span class="s4">:]))</span>
+<a name="l209"><span class="ln">209  </span></a>                <span class="s2">elif </span><span class="s1">switch </span><span class="s4">== </span><span class="s5">&quot;-U&quot;</span><span class="s4">:</span>
+<a name="l210"><span class="ln">210  </span></a>                    <span class="s1">ext</span><span class="s4">.</span><span class="s1">undef_macros</span><span class="s4">.</span><span class="s1">append</span><span class="s4">(</span><span class="s1">value</span><span class="s4">)</span>
+<a name="l211"><span class="ln">211  </span></a>                <span class="s2">elif </span><span class="s1">switch </span><span class="s4">== </span><span class="s5">&quot;-C&quot;</span><span class="s4">:  </span><span class="s3"># only here 'cause makesetup has it!</span>
+<a name="l212"><span class="ln">212  </span></a>                    <span class="s1">ext</span><span class="s4">.</span><span class="s1">extra_compile_args</span><span class="s4">.</span><span class="s1">append</span><span class="s4">(</span><span class="s1">word</span><span class="s4">)</span>
+<a name="l213"><span class="ln">213  </span></a>                <span class="s2">elif </span><span class="s1">switch </span><span class="s4">== </span><span class="s5">&quot;-l&quot;</span><span class="s4">:</span>
+<a name="l214"><span class="ln">214  </span></a>                    <span class="s1">ext</span><span class="s4">.</span><span class="s1">libraries</span><span class="s4">.</span><span class="s1">append</span><span class="s4">(</span><span class="s1">value</span><span class="s4">)</span>
+<a name="l215"><span class="ln">215  </span></a>                <span class="s2">elif </span><span class="s1">switch </span><span class="s4">== </span><span class="s5">&quot;-L&quot;</span><span class="s4">:</span>
+<a name="l216"><span class="ln">216  </span></a>                    <span class="s1">ext</span><span class="s4">.</span><span class="s1">library_dirs</span><span class="s4">.</span><span class="s1">append</span><span class="s4">(</span><span class="s1">value</span><span class="s4">)</span>
+<a name="l217"><span class="ln">217  </span></a>                <span class="s2">elif </span><span class="s1">switch </span><span class="s4">== </span><span class="s5">&quot;-R&quot;</span><span class="s4">:</span>
+<a name="l218"><span class="ln">218  </span></a>                    <span class="s1">ext</span><span class="s4">.</span><span class="s1">runtime_library_dirs</span><span class="s4">.</span><span class="s1">append</span><span class="s4">(</span><span class="s1">value</span><span class="s4">)</span>
+<a name="l219"><span class="ln">219  </span></a>                <span class="s2">elif </span><span class="s1">word </span><span class="s4">== </span><span class="s5">&quot;-rpath&quot;</span><span class="s4">:</span>
+<a name="l220"><span class="ln">220  </span></a>                    <span class="s1">append_next_word </span><span class="s4">= </span><span class="s1">ext</span><span class="s4">.</span><span class="s1">runtime_library_dirs</span>
+<a name="l221"><span class="ln">221  </span></a>                <span class="s2">elif </span><span class="s1">word </span><span class="s4">== </span><span class="s5">&quot;-Xlinker&quot;</span><span class="s4">:</span>
+<a name="l222"><span class="ln">222  </span></a>                    <span class="s1">append_next_word </span><span class="s4">= </span><span class="s1">ext</span><span class="s4">.</span><span class="s1">extra_link_args</span>
+<a name="l223"><span class="ln">223  </span></a>                <span class="s2">elif </span><span class="s1">word </span><span class="s4">== </span><span class="s5">&quot;-Xcompiler&quot;</span><span class="s4">:</span>
+<a name="l224"><span class="ln">224  </span></a>                    <span class="s1">append_next_word </span><span class="s4">= </span><span class="s1">ext</span><span class="s4">.</span><span class="s1">extra_compile_args</span>
+<a name="l225"><span class="ln">225  </span></a>                <span class="s2">elif </span><span class="s1">switch </span><span class="s4">== </span><span class="s5">&quot;-u&quot;</span><span class="s4">:</span>
+<a name="l226"><span class="ln">226  </span></a>                    <span class="s1">ext</span><span class="s4">.</span><span class="s1">extra_link_args</span><span class="s4">.</span><span class="s1">append</span><span class="s4">(</span><span class="s1">word</span><span class="s4">)</span>
+<a name="l227"><span class="ln">227  </span></a>                    <span class="s2">if not </span><span class="s1">value</span><span class="s4">:</span>
+<a name="l228"><span class="ln">228  </span></a>                        <span class="s1">append_next_word </span><span class="s4">= </span><span class="s1">ext</span><span class="s4">.</span><span class="s1">extra_link_args</span>
+<a name="l229"><span class="ln">229  </span></a>                <span class="s2">elif </span><span class="s1">suffix </span><span class="s2">in </span><span class="s4">(</span><span class="s5">&quot;.a&quot;</span><span class="s4">, </span><span class="s5">&quot;.so&quot;</span><span class="s4">, </span><span class="s5">&quot;.sl&quot;</span><span class="s4">, </span><span class="s5">&quot;.o&quot;</span><span class="s4">, </span><span class="s5">&quot;.dylib&quot;</span><span class="s4">):</span>
+<a name="l230"><span class="ln">230  </span></a>                    <span class="s3"># NB. a really faithful emulation of makesetup would</span>
+<a name="l231"><span class="ln">231  </span></a>                    <span class="s3"># append a .o file to extra_objects only if it</span>
+<a name="l232"><span class="ln">232  </span></a>                    <span class="s3"># had a slash in it; otherwise, it would s/.o/.c/</span>
+<a name="l233"><span class="ln">233  </span></a>                    <span class="s3"># and append it to sources.  Hmmmm.</span>
+<a name="l234"><span class="ln">234  </span></a>                    <span class="s1">ext</span><span class="s4">.</span><span class="s1">extra_objects</span><span class="s4">.</span><span class="s1">append</span><span class="s4">(</span><span class="s1">word</span><span class="s4">)</span>
+<a name="l235"><span class="ln">235  </span></a>                <span class="s2">else</span><span class="s4">:</span>
+<a name="l236"><span class="ln">236  </span></a>                    <span class="s1">file</span><span class="s4">.</span><span class="s1">warn</span><span class="s4">(</span><span class="s5">&quot;unrecognized argument '%s'&quot; </span><span class="s4">% </span><span class="s1">word</span><span class="s4">)</span>
+<a name="l237"><span class="ln">237  </span></a>
+<a name="l238"><span class="ln">238  </span></a>            <span class="s1">extensions</span><span class="s4">.</span><span class="s1">append</span><span class="s4">(</span><span class="s1">ext</span><span class="s4">)</span>
+<a name="l239"><span class="ln">239  </span></a>    <span class="s2">finally</span><span class="s4">:</span>
+<a name="l240"><span class="ln">240  </span></a>        <span class="s1">file</span><span class="s4">.</span><span class="s1">close</span><span class="s4">()</span>
+<a name="l241"><span class="ln">241  </span></a>
+<a name="l242"><span class="ln">242  </span></a>    <span class="s2">return </span><span class="s1">extensions</span>
+<a name="l243"><span class="ln">243  </span></a></pre>
+</body>
+</html>

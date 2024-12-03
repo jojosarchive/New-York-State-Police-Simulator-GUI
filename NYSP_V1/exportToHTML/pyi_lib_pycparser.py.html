@@ -1,0 +1,76 @@
+<html>
+<head>
+<title>pyi_lib_pycparser.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #7a7e85;}
+.s1 { color: #bcbec4;}
+.s2 { color: #cf8e6d;}
+.s3 { color: #bcbec4;}
+.s4 { color: #6aab73;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+pyi_lib_pycparser.py</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0"># -----------------------------------------------------------------------------</span>
+<a name="l2"><span class="ln">2    </span></a><span class="s0"># Copyright (c) 2014-2020, PyInstaller Development Team.</span>
+<a name="l3"><span class="ln">3    </span></a><span class="s0">#</span>
+<a name="l4"><span class="ln">4    </span></a><span class="s0"># Distributed under the terms of the GNU General Public License (version 2</span>
+<a name="l5"><span class="ln">5    </span></a><span class="s0"># or later) with exception for distributing the bootloader.</span>
+<a name="l6"><span class="ln">6    </span></a><span class="s0">#</span>
+<a name="l7"><span class="ln">7    </span></a><span class="s0"># The full license is in the file COPYING.txt, distributed with this software.</span>
+<a name="l8"><span class="ln">8    </span></a><span class="s0">#</span>
+<a name="l9"><span class="ln">9    </span></a><span class="s0"># SPDX-License-Identifier: (GPL-2.0-or-later WITH Bootloader-exception)</span>
+<a name="l10"><span class="ln">10   </span></a><span class="s0"># -----------------------------------------------------------------------------</span>
+<a name="l11"><span class="ln">11   </span></a>
+<a name="l12"><span class="ln">12   </span></a><span class="s2">import </span><span class="s1">os</span>
+<a name="l13"><span class="ln">13   </span></a>
+<a name="l14"><span class="ln">14   </span></a><span class="s1">fnames_to_track </span><span class="s3">= [</span>
+<a name="l15"><span class="ln">15   </span></a>    <span class="s4">'lextab.py'</span><span class="s3">,</span>
+<a name="l16"><span class="ln">16   </span></a>    <span class="s4">'yacctab.py'</span><span class="s3">,</span>
+<a name="l17"><span class="ln">17   </span></a><span class="s3">]</span>
+<a name="l18"><span class="ln">18   </span></a>
+<a name="l19"><span class="ln">19   </span></a>
+<a name="l20"><span class="ln">20   </span></a><span class="s2">def </span><span class="s1">fnames_found</span><span class="s3">():</span>
+<a name="l21"><span class="ln">21   </span></a>    <span class="s2">return </span><span class="s3">[</span><span class="s1">fname </span><span class="s2">for </span><span class="s1">fname </span><span class="s2">in </span><span class="s1">fnames_to_track </span><span class="s2">if </span><span class="s1">os</span><span class="s3">.</span><span class="s1">path</span><span class="s3">.</span><span class="s1">isfile</span><span class="s3">(</span><span class="s1">fname</span><span class="s3">)]</span>
+<a name="l22"><span class="ln">22   </span></a>
+<a name="l23"><span class="ln">23   </span></a>
+<a name="l24"><span class="ln">24   </span></a><span class="s2">if </span><span class="s1">__name__ </span><span class="s3">== </span><span class="s4">'__main__'</span><span class="s3">:</span>
+<a name="l25"><span class="ln">25   </span></a>
+<a name="l26"><span class="ln">26   </span></a>    <span class="s0"># Confirm no files exist before we start.</span>
+<a name="l27"><span class="ln">27   </span></a>    <span class="s2">if </span><span class="s1">fnames_found</span><span class="s3">():</span>
+<a name="l28"><span class="ln">28   </span></a>        <span class="s2">raise </span><span class="s1">SystemExit</span><span class="s3">(</span><span class="s4">'FAIL: Files present before test.'</span><span class="s3">)</span>
+<a name="l29"><span class="ln">29   </span></a>
+<a name="l30"><span class="ln">30   </span></a>    <span class="s0"># Minimal invocation that generates the files.</span>
+<a name="l31"><span class="ln">31   </span></a>    <span class="s2">from </span><span class="s1">pycparser </span><span class="s2">import </span><span class="s1">c_parser</span>
+<a name="l32"><span class="ln">32   </span></a>    <span class="s1">parser </span><span class="s3">= </span><span class="s1">c_parser</span><span class="s3">.</span><span class="s1">CParser</span><span class="s3">()</span>
+<a name="l33"><span class="ln">33   </span></a>
+<a name="l34"><span class="ln">34   </span></a>    <span class="s0"># Were the files generated?</span>
+<a name="l35"><span class="ln">35   </span></a>    <span class="s1">fnames_generated </span><span class="s3">= </span><span class="s1">fnames_found</span><span class="s3">()</span>
+<a name="l36"><span class="ln">36   </span></a>
+<a name="l37"><span class="ln">37   </span></a>    <span class="s0"># Try to remove them, if so.</span>
+<a name="l38"><span class="ln">38   </span></a>    <span class="s2">for </span><span class="s1">fname </span><span class="s2">in </span><span class="s1">fnames_generated</span><span class="s3">:</span>
+<a name="l39"><span class="ln">39   </span></a>        <span class="s2">try</span><span class="s3">:</span>
+<a name="l40"><span class="ln">40   </span></a>            <span class="s1">os</span><span class="s3">.</span><span class="s1">unlink</span><span class="s3">(</span><span class="s1">fname</span><span class="s3">)</span>
+<a name="l41"><span class="ln">41   </span></a>        <span class="s2">except </span><span class="s1">OSError</span><span class="s3">:</span>
+<a name="l42"><span class="ln">42   </span></a>            <span class="s2">pass</span>
+<a name="l43"><span class="ln">43   </span></a>
+<a name="l44"><span class="ln">44   </span></a>    <span class="s0"># Did we fail at deleting any file?</span>
+<a name="l45"><span class="ln">45   </span></a>    <span class="s1">fnames_left </span><span class="s3">= </span><span class="s1">fnames_found</span><span class="s3">()</span>
+<a name="l46"><span class="ln">46   </span></a>
+<a name="l47"><span class="ln">47   </span></a>    <span class="s0"># Fail if any file was generated.</span>
+<a name="l48"><span class="ln">48   </span></a>    <span class="s2">if </span><span class="s1">fnames_generated</span><span class="s3">:</span>
+<a name="l49"><span class="ln">49   </span></a>        <span class="s2">if </span><span class="s1">fnames_left</span><span class="s3">:</span>
+<a name="l50"><span class="ln">50   </span></a>            <span class="s2">raise </span><span class="s1">SystemExit</span><span class="s3">(</span><span class="s4">'FAIL: Files generated and not removed.'</span><span class="s3">)</span>
+<a name="l51"><span class="ln">51   </span></a>        <span class="s2">else</span><span class="s3">:</span>
+<a name="l52"><span class="ln">52   </span></a>            <span class="s2">raise </span><span class="s1">SystemExit</span><span class="s3">(</span><span class="s4">'FAIL: Files generated but removed.'</span><span class="s3">)</span>
+<a name="l53"><span class="ln">53   </span></a>
+<a name="l54"><span class="ln">54   </span></a>    <span class="s0"># Success.</span>
+<a name="l55"><span class="ln">55   </span></a></pre>
+</body>
+</html>

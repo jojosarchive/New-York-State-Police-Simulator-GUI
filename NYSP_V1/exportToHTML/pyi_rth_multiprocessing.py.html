@@ -1,0 +1,131 @@
+<html>
+<head>
+<title>pyi_rth_multiprocessing.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #7a7e85;}
+.s1 { color: #bcbec4;}
+.s2 { color: #cf8e6d;}
+.s3 { color: #bcbec4;}
+.s4 { color: #2aacb8;}
+.s5 { color: #6aab73;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+pyi_rth_multiprocessing.py</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0">#-----------------------------------------------------------------------------</span>
+<a name="l2"><span class="ln">2    </span></a><span class="s0"># Copyright (c) 2017-2023, PyInstaller Development Team.</span>
+<a name="l3"><span class="ln">3    </span></a><span class="s0">#</span>
+<a name="l4"><span class="ln">4    </span></a><span class="s0"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<a name="l5"><span class="ln">5    </span></a><span class="s0"># you may not use this file except in compliance with the License.</span>
+<a name="l6"><span class="ln">6    </span></a><span class="s0">#</span>
+<a name="l7"><span class="ln">7    </span></a><span class="s0"># The full license is in the file COPYING.txt, distributed with this software.</span>
+<a name="l8"><span class="ln">8    </span></a><span class="s0">#</span>
+<a name="l9"><span class="ln">9    </span></a><span class="s0"># SPDX-License-Identifier: Apache-2.0</span>
+<a name="l10"><span class="ln">10   </span></a><span class="s0">#-----------------------------------------------------------------------------</span>
+<a name="l11"><span class="ln">11   </span></a>
+<a name="l12"><span class="ln">12   </span></a>
+<a name="l13"><span class="ln">13   </span></a><span class="s2">def </span><span class="s1">_pyi_rthook</span><span class="s3">():</span>
+<a name="l14"><span class="ln">14   </span></a>    <span class="s2">import </span><span class="s1">os</span>
+<a name="l15"><span class="ln">15   </span></a>    <span class="s2">import </span><span class="s1">sys</span>
+<a name="l16"><span class="ln">16   </span></a>
+<a name="l17"><span class="ln">17   </span></a>    <span class="s2">import </span><span class="s1">threading</span>
+<a name="l18"><span class="ln">18   </span></a>    <span class="s2">import </span><span class="s1">multiprocessing</span>
+<a name="l19"><span class="ln">19   </span></a>    <span class="s2">import </span><span class="s1">multiprocessing</span><span class="s3">.</span><span class="s1">spawn</span>
+<a name="l20"><span class="ln">20   </span></a>
+<a name="l21"><span class="ln">21   </span></a>    <span class="s2">from </span><span class="s1">subprocess </span><span class="s2">import </span><span class="s1">_args_from_interpreter_flags</span>
+<a name="l22"><span class="ln">22   </span></a>
+<a name="l23"><span class="ln">23   </span></a>    <span class="s0"># Prevent `spawn` from trying to read `__main__` in from the main script</span>
+<a name="l24"><span class="ln">24   </span></a>    <span class="s1">multiprocessing</span><span class="s3">.</span><span class="s1">process</span><span class="s3">.</span><span class="s1">ORIGINAL_DIR </span><span class="s3">= </span><span class="s2">None</span>
+<a name="l25"><span class="ln">25   </span></a>
+<a name="l26"><span class="ln">26   </span></a>    <span class="s2">def </span><span class="s1">_freeze_support</span><span class="s3">():</span>
+<a name="l27"><span class="ln">27   </span></a>        <span class="s0"># We want to catch the two processes that are spawned by the multiprocessing code:</span>
+<a name="l28"><span class="ln">28   </span></a>        <span class="s0"># - the semaphore tracker, which cleans up named semaphores in the `spawn` multiprocessing mode</span>
+<a name="l29"><span class="ln">29   </span></a>        <span class="s0"># - the fork server, which keeps track of worker processes in the `forkserver` mode.</span>
+<a name="l30"><span class="ln">30   </span></a>        <span class="s0"># Both of these processes are started by spawning a new copy of the running executable, passing it the flags</span>
+<a name="l31"><span class="ln">31   </span></a>        <span class="s0"># from `_args_from_interpreter_flags` and then &quot;-c&quot; and an import statement.</span>
+<a name="l32"><span class="ln">32   </span></a>        <span class="s0"># Look for those flags and the import statement, then `exec()` the code ourselves.</span>
+<a name="l33"><span class="ln">33   </span></a>
+<a name="l34"><span class="ln">34   </span></a>        <span class="s2">if </span><span class="s3">(</span>
+<a name="l35"><span class="ln">35   </span></a>            <span class="s1">len</span><span class="s3">(</span><span class="s1">sys</span><span class="s3">.</span><span class="s1">argv</span><span class="s3">) &gt;= </span><span class="s4">2 </span><span class="s2">and </span><span class="s1">sys</span><span class="s3">.</span><span class="s1">argv</span><span class="s3">[-</span><span class="s4">2</span><span class="s3">] == </span><span class="s5">'-c' </span><span class="s2">and </span><span class="s1">sys</span><span class="s3">.</span><span class="s1">argv</span><span class="s3">[-</span><span class="s4">1</span><span class="s3">].</span><span class="s1">startswith</span><span class="s3">(</span>
+<a name="l36"><span class="ln">36   </span></a>                <span class="s3">(</span><span class="s5">'from multiprocessing.resource_tracker import main'</span><span class="s3">, </span><span class="s5">'from multiprocessing.forkserver import main'</span><span class="s3">)</span>
+<a name="l37"><span class="ln">37   </span></a>            <span class="s3">) </span><span class="s2">and </span><span class="s1">set</span><span class="s3">(</span><span class="s1">sys</span><span class="s3">.</span><span class="s1">argv</span><span class="s3">[</span><span class="s4">1</span><span class="s3">:-</span><span class="s4">2</span><span class="s3">]) == </span><span class="s1">set</span><span class="s3">(</span><span class="s1">_args_from_interpreter_flags</span><span class="s3">())</span>
+<a name="l38"><span class="ln">38   </span></a>        <span class="s3">):</span>
+<a name="l39"><span class="ln">39   </span></a>            <span class="s1">exec</span><span class="s3">(</span><span class="s1">sys</span><span class="s3">.</span><span class="s1">argv</span><span class="s3">[-</span><span class="s4">1</span><span class="s3">])</span>
+<a name="l40"><span class="ln">40   </span></a>            <span class="s1">sys</span><span class="s3">.</span><span class="s1">exit</span><span class="s3">()</span>
+<a name="l41"><span class="ln">41   </span></a>
+<a name="l42"><span class="ln">42   </span></a>        <span class="s2">if </span><span class="s1">multiprocessing</span><span class="s3">.</span><span class="s1">spawn</span><span class="s3">.</span><span class="s1">is_forking</span><span class="s3">(</span><span class="s1">sys</span><span class="s3">.</span><span class="s1">argv</span><span class="s3">):</span>
+<a name="l43"><span class="ln">43   </span></a>            <span class="s1">kwds </span><span class="s3">= {}</span>
+<a name="l44"><span class="ln">44   </span></a>            <span class="s2">for </span><span class="s1">arg </span><span class="s2">in </span><span class="s1">sys</span><span class="s3">.</span><span class="s1">argv</span><span class="s3">[</span><span class="s4">2</span><span class="s3">:]:</span>
+<a name="l45"><span class="ln">45   </span></a>                <span class="s1">name</span><span class="s3">, </span><span class="s1">value </span><span class="s3">= </span><span class="s1">arg</span><span class="s3">.</span><span class="s1">split</span><span class="s3">(</span><span class="s5">'='</span><span class="s3">)</span>
+<a name="l46"><span class="ln">46   </span></a>                <span class="s2">if </span><span class="s1">value </span><span class="s3">== </span><span class="s5">'None'</span><span class="s3">:</span>
+<a name="l47"><span class="ln">47   </span></a>                    <span class="s1">kwds</span><span class="s3">[</span><span class="s1">name</span><span class="s3">] = </span><span class="s2">None</span>
+<a name="l48"><span class="ln">48   </span></a>                <span class="s2">else</span><span class="s3">:</span>
+<a name="l49"><span class="ln">49   </span></a>                    <span class="s1">kwds</span><span class="s3">[</span><span class="s1">name</span><span class="s3">] = </span><span class="s1">int</span><span class="s3">(</span><span class="s1">value</span><span class="s3">)</span>
+<a name="l50"><span class="ln">50   </span></a>            <span class="s1">multiprocessing</span><span class="s3">.</span><span class="s1">spawn</span><span class="s3">.</span><span class="s1">spawn_main</span><span class="s3">(**</span><span class="s1">kwds</span><span class="s3">)</span>
+<a name="l51"><span class="ln">51   </span></a>            <span class="s1">sys</span><span class="s3">.</span><span class="s1">exit</span><span class="s3">()</span>
+<a name="l52"><span class="ln">52   </span></a>
+<a name="l53"><span class="ln">53   </span></a>    <span class="s1">multiprocessing</span><span class="s3">.</span><span class="s1">freeze_support </span><span class="s3">= </span><span class="s1">multiprocessing</span><span class="s3">.</span><span class="s1">spawn</span><span class="s3">.</span><span class="s1">freeze_support </span><span class="s3">= </span><span class="s1">_freeze_support</span>
+<a name="l54"><span class="ln">54   </span></a>
+<a name="l55"><span class="ln">55   </span></a>    <span class="s0"># Bootloader clears the `_MEIPASS2` environment variable, which allows a PyInstaller-frozen executable to run a</span>
+<a name="l56"><span class="ln">56   </span></a>    <span class="s0"># different PyInstaller-frozen executable. However, in the case of `multiprocessing`, we are actually trying</span>
+<a name="l57"><span class="ln">57   </span></a>    <span class="s0"># to run the same executable, so we need to restore `_MEIPASS2` to prevent onefile executable from unpacking</span>
+<a name="l58"><span class="ln">58   </span></a>    <span class="s0"># again in a different directory.</span>
+<a name="l59"><span class="ln">59   </span></a>    <span class="s0">#</span>
+<a name="l60"><span class="ln">60   </span></a>    <span class="s0"># This is needed for `spawn` start method (default on Windows and macOS) and also with `forkserver` start method</span>
+<a name="l61"><span class="ln">61   </span></a>    <span class="s0"># (available on Linux and macOS). It is not needed for `fork` start method (default on Linux and other Unix OSes),</span>
+<a name="l62"><span class="ln">62   </span></a>    <span class="s0"># because fork copies the parent process instead of starting it from scratch.</span>
+<a name="l63"><span class="ln">63   </span></a>
+<a name="l64"><span class="ln">64   </span></a>    <span class="s0"># Mix-in to re-set _MEIPASS2 from sys._MEIPASS.</span>
+<a name="l65"><span class="ln">65   </span></a>    <span class="s2">class </span><span class="s1">FrozenSupportMixIn</span><span class="s3">:</span>
+<a name="l66"><span class="ln">66   </span></a>        <span class="s1">_lock </span><span class="s3">= </span><span class="s1">threading</span><span class="s3">.</span><span class="s1">Lock</span><span class="s3">()</span>
+<a name="l67"><span class="ln">67   </span></a>
+<a name="l68"><span class="ln">68   </span></a>        <span class="s2">def </span><span class="s1">__init__</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, *</span><span class="s1">args</span><span class="s3">, **</span><span class="s1">kw</span><span class="s3">):</span>
+<a name="l69"><span class="ln">69   </span></a>            <span class="s0"># The whole code block needs be executed under a lock to prevent race conditions between `os.putenv` and</span>
+<a name="l70"><span class="ln">70   </span></a>            <span class="s0"># `os.unsetenv` calls when processes are spawned concurrently from multiple threads. See #7410.</span>
+<a name="l71"><span class="ln">71   </span></a>            <span class="s2">with </span><span class="s1">self</span><span class="s3">.</span><span class="s1">_lock</span><span class="s3">:</span>
+<a name="l72"><span class="ln">72   </span></a>                <span class="s0"># We have to set original _MEIPASS2 value from sys._MEIPASS to get --onefile mode working.</span>
+<a name="l73"><span class="ln">73   </span></a>                <span class="s1">os</span><span class="s3">.</span><span class="s1">putenv</span><span class="s3">(</span><span class="s5">'_MEIPASS2'</span><span class="s3">, </span><span class="s1">sys</span><span class="s3">.</span><span class="s1">_MEIPASS</span><span class="s3">)  </span><span class="s0"># @UndefinedVariable</span>
+<a name="l74"><span class="ln">74   </span></a>                <span class="s2">try</span><span class="s3">:</span>
+<a name="l75"><span class="ln">75   </span></a>                    <span class="s1">super</span><span class="s3">().</span><span class="s1">__init__</span><span class="s3">(*</span><span class="s1">args</span><span class="s3">, **</span><span class="s1">kw</span><span class="s3">)</span>
+<a name="l76"><span class="ln">76   </span></a>                <span class="s2">finally</span><span class="s3">:</span>
+<a name="l77"><span class="ln">77   </span></a>                    <span class="s0"># On some platforms (e.g. AIX) 'os.unsetenv()' is not available. In those cases we cannot delete the</span>
+<a name="l78"><span class="ln">78   </span></a>                    <span class="s0"># variable but only set it to the empty string. The bootloader can handle this case.</span>
+<a name="l79"><span class="ln">79   </span></a>                    <span class="s2">if </span><span class="s1">hasattr</span><span class="s3">(</span><span class="s1">os</span><span class="s3">, </span><span class="s5">'unsetenv'</span><span class="s3">):</span>
+<a name="l80"><span class="ln">80   </span></a>                        <span class="s1">os</span><span class="s3">.</span><span class="s1">unsetenv</span><span class="s3">(</span><span class="s5">'_MEIPASS2'</span><span class="s3">)</span>
+<a name="l81"><span class="ln">81   </span></a>                    <span class="s2">else</span><span class="s3">:</span>
+<a name="l82"><span class="ln">82   </span></a>                        <span class="s1">os</span><span class="s3">.</span><span class="s1">putenv</span><span class="s3">(</span><span class="s5">'_MEIPASS2'</span><span class="s3">, </span><span class="s5">''</span><span class="s3">)</span>
+<a name="l83"><span class="ln">83   </span></a>
+<a name="l84"><span class="ln">84   </span></a>    <span class="s2">if </span><span class="s1">sys</span><span class="s3">.</span><span class="s1">platform</span><span class="s3">.</span><span class="s1">startswith</span><span class="s3">(</span><span class="s5">'win'</span><span class="s3">):</span>
+<a name="l85"><span class="ln">85   </span></a>        <span class="s0"># Windows; patch `Popen` for `spawn` start method</span>
+<a name="l86"><span class="ln">86   </span></a>        <span class="s2">from </span><span class="s1">multiprocessing </span><span class="s2">import </span><span class="s1">popen_spawn_win32</span>
+<a name="l87"><span class="ln">87   </span></a>
+<a name="l88"><span class="ln">88   </span></a>        <span class="s2">class </span><span class="s1">_SpawnPopen</span><span class="s3">(</span><span class="s1">FrozenSupportMixIn</span><span class="s3">, </span><span class="s1">popen_spawn_win32</span><span class="s3">.</span><span class="s1">Popen</span><span class="s3">):</span>
+<a name="l89"><span class="ln">89   </span></a>            <span class="s2">pass</span>
+<a name="l90"><span class="ln">90   </span></a>
+<a name="l91"><span class="ln">91   </span></a>        <span class="s1">popen_spawn_win32</span><span class="s3">.</span><span class="s1">Popen </span><span class="s3">= </span><span class="s1">_SpawnPopen</span>
+<a name="l92"><span class="ln">92   </span></a>    <span class="s2">else</span><span class="s3">:</span>
+<a name="l93"><span class="ln">93   </span></a>        <span class="s0"># UNIX OSes; patch `Popen` for `spawn` and `forkserver` start methods</span>
+<a name="l94"><span class="ln">94   </span></a>        <span class="s2">from </span><span class="s1">multiprocessing </span><span class="s2">import </span><span class="s1">popen_spawn_posix</span>
+<a name="l95"><span class="ln">95   </span></a>        <span class="s2">from </span><span class="s1">multiprocessing </span><span class="s2">import </span><span class="s1">popen_forkserver</span>
+<a name="l96"><span class="ln">96   </span></a>
+<a name="l97"><span class="ln">97   </span></a>        <span class="s2">class </span><span class="s1">_SpawnPopen</span><span class="s3">(</span><span class="s1">FrozenSupportMixIn</span><span class="s3">, </span><span class="s1">popen_spawn_posix</span><span class="s3">.</span><span class="s1">Popen</span><span class="s3">):</span>
+<a name="l98"><span class="ln">98   </span></a>            <span class="s2">pass</span>
+<a name="l99"><span class="ln">99   </span></a>
+<a name="l100"><span class="ln">100  </span></a>        <span class="s2">class </span><span class="s1">_ForkserverPopen</span><span class="s3">(</span><span class="s1">FrozenSupportMixIn</span><span class="s3">, </span><span class="s1">popen_forkserver</span><span class="s3">.</span><span class="s1">Popen</span><span class="s3">):</span>
+<a name="l101"><span class="ln">101  </span></a>            <span class="s2">pass</span>
+<a name="l102"><span class="ln">102  </span></a>
+<a name="l103"><span class="ln">103  </span></a>        <span class="s1">popen_spawn_posix</span><span class="s3">.</span><span class="s1">Popen </span><span class="s3">= </span><span class="s1">_SpawnPopen</span>
+<a name="l104"><span class="ln">104  </span></a>        <span class="s1">popen_forkserver</span><span class="s3">.</span><span class="s1">Popen </span><span class="s3">= </span><span class="s1">_ForkserverPopen</span>
+<a name="l105"><span class="ln">105  </span></a>
+<a name="l106"><span class="ln">106  </span></a>
+<a name="l107"><span class="ln">107  </span></a><span class="s1">_pyi_rthook</span><span class="s3">()</span>
+<a name="l108"><span class="ln">108  </span></a><span class="s2">del </span><span class="s1">_pyi_rthook</span>
+<a name="l109"><span class="ln">109  </span></a></pre>
+</body>
+</html>
